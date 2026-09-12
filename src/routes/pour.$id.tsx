@@ -17,6 +17,7 @@ import { PourForm } from "@/components/pour-form";
 import { PatternMark } from "@/components/pattern-mark";
 import { PourPhoto } from "@/components/pour-photo";
 import { RatingStars } from "@/components/rating";
+import { SharePourButton } from "@/components/share-pour";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -122,6 +123,7 @@ function PourDetail() {
       width="medium"
       action={
         <div className="flex items-center gap-1">
+          <SharePourButton pour={pour} />
           {canEdit ? (
             <>
               <Button
@@ -201,6 +203,8 @@ function PourDetail() {
             ) : (
               <p className="text-sm text-muted">这杯没有写笔记。</p>
             )}
+
+            <SharePourButton pour={pour} variant="cta" className="self-start" />
           </div>
         </article>
       )}

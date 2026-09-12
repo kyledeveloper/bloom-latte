@@ -54,6 +54,7 @@ function Home() {
   const showExamples = Boolean(ready && signedIn && pours.length === 0);
 
   return (
+    <>
     <AppShell
       editorial
       width="wide"
@@ -157,15 +158,16 @@ function Home() {
           </section>
         ) : null}
       </div>
+    </AppShell>
 
       <Link
         to="/new"
-        className="fab-in fixed z-20 flex h-12 items-center gap-2 rounded-full bg-primary px-4 text-sm font-medium text-primary-fg shadow-[var(--shadow-border)] transition-transform duration-150 hover:-translate-y-0.5 active:scale-[0.96] sm:hidden right-[max(1.25rem,env(safe-area-inset-right))] bottom-[max(1.25rem,env(safe-area-inset-bottom))]"
+        className="fab-in fixed right-[max(1rem,env(safe-area-inset-right))] bottom-[calc(env(safe-area-inset-bottom)+1rem)] z-30 flex h-12 items-center gap-2 rounded-full bg-primary px-4 text-sm font-medium text-primary-fg shadow-[var(--shadow-border)] transition-transform duration-150 hover:-translate-y-0.5 active:scale-[0.96] sm:hidden"
       >
         <Camera className="size-5" />
         记录
       </Link>
-    </AppShell>
+    </>
   );
 }
 

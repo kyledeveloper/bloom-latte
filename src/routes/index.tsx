@@ -89,12 +89,14 @@ function Home() {
         {ready && !signedIn ? (
           <div className="flex flex-col gap-2 rounded-lg bg-cream/80 px-3 py-2.5 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
             <p>{hasOwnPours ? t("guestBackupHint") : t("guestWelcomeHint")}</p>
-            <Link
-              to="/login"
-              className="shrink-0 font-medium text-fg underline-offset-4 hover:underline"
-            >
-              {t("signIn")}
-            </Link>
+            {hasOwnPours ? (
+              <Link
+                to="/login"
+                className="shrink-0 font-medium text-fg underline-offset-4 hover:underline"
+              >
+                {t("signIn")}
+              </Link>
+            ) : null}
           </div>
         ) : null}
 

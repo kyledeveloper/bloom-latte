@@ -1,0 +1,149 @@
+export const PATTERN_IDS = [
+  "heart",
+  "tulip",
+  "rosetta",
+  "swan",
+  "winged-heart",
+  "phoenix",
+  "free-pour",
+] as const;
+
+export type PatternId = (typeof PATTERN_IDS)[number];
+
+export type Pour = {
+  id: string;
+  createdAt: string;
+  photo: string;
+  pattern: PatternId;
+  rating: number;
+  beans: string;
+  milk: string;
+  grind: string;
+  notes: string;
+  demo?: boolean;
+};
+
+export type PourDraft = Omit<Pour, "id" | "createdAt" | "demo"> & {
+  id?: string;
+  createdAt?: string;
+};
+
+export const PATTERNS: {
+  id: PatternId;
+  name: string;
+  en: string;
+  hint: string;
+}[] = [
+  { id: "heart", name: "爱心", en: "Heart", hint: "停杯、一提" },
+  { id: "tulip", name: "郁金香", en: "Tulip", hint: "点、推、叠" },
+  { id: "rosetta", name: "罗斯塔", en: "Rosetta", hint: "摆腕成叶" },
+  { id: "swan", name: "天鹅", en: "Swan", hint: "S 线出颈" },
+  { id: "winged-heart", name: "翅膀爱心", en: "Winged Heart", hint: "对称双翼" },
+  { id: "phoenix", name: "凤凰", en: "Phoenix", hint: "扇羽收尾" },
+  { id: "free-pour", name: "自由拉花", en: "Free pour", hint: "随手一笔" },
+];
+
+export const MILKS = ["全脂鲜奶", "燕麦奶", "杏仁奶", "豆奶", "椰奶"] as const;
+
+export function patternOf(id: PatternId) {
+  return PATTERNS.find((p) => p.id === id) ?? PATTERNS[0];
+}
+
+export function pourCardSrc(pour: Pour) {
+  const photo = pour.photo;
+  if (photo.startsWith("/pours/") && !photo.startsWith("/pours/card/")) {
+    return `/pours/card/${photo.slice("/pours/".length)}`;
+  }
+  return photo;
+}
+
+
+export function newId() {
+  return crypto.randomUUID();
+}
+
+export async function compressImage(
+  file: File,
+  maxEdge = 960,
+  quality = 0.74,
+): Promise<string> {
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, maxEdge / Math.max(bitmap.width, bitmap.height));
+  const width = Math.max(1, Math.round(bitmap.width * scale));
+  const height = Math.max(1, Math.round(bitmap.height * scale));
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("无法处理照片");
+  ctx.drawImage(bitmap, 0, 0, width, height);
+  bitmap.close();
+  return canvas.toDataURL("image/jpeg", quality);
+}
+
+export function formatPourDate(iso: string) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const month = d.getMonth() + 1;
+  const day = d.getDate();
+  const week = "日一二三四五六"[d.getDay()];
+  return `${month} 月 ${day} 日 · 周${week}`;
+}
+
+export function formatShortDate(iso: string) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return `${d.getMonth() + 1}/${d.getDate()}`;
+}
+
+export function sameDay(a: string, b: string) {
+  const da = new Date(a);
+  const db = new Date(b);
+  return (
+    da.getFullYear() === db.getFullYear() &&
+    da.getMonth() === db.getMonth() &&
+    da.getDate() === db.getDate()
+  );
+}
+
+export function pourStreak(pours: Pour[], now = new Date()) {
+  const days = new Set(
+    pours.map((p) => {
+      const d = new Date(p.createdAt);
+      return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+    }),
+  );
+  let streak = 0;
+  const cursor = new Date(now);
+  cursor.setHours(0, 0, 0, 0);
+  while (
+    days.has(
+      `${cursor.getFullYear()}-${cursor.getMonth()}-${cursor.getDate()}`,
+    )
+  ) {
+    streak += 1;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  if (streak === 0) {
+    cursor.setDate(cursor.getDate() - 1);
+    while (
+      days.has(
+        `${cursor.getFullYear()}-${cursor.getMonth()}-${cursor.getDate()}`,
+      )
+    ) {
+      streak += 1;
+      cursor.setDate(cursor.getDate() - 1);
+    }
+  }
+  return streak;
+}
+
+export const emptyDraft = (): PourDraft => ({
+  photo: "",
+  pattern: "heart",
+  rating: 3,
+  beans: "",
+  milk: "全脂鲜奶",
+  grind: "",
+  notes: "",
+});

@@ -301,50 +301,25 @@ export function shareFilename(pour: Pour) {
 export async function nativeShareImage(
   blob: Blob,
   filename: string,
-  title: string,
-  url?: string,
 ) {
   const file = new File([blob], filename, { type: blob.type || "image/jpeg" });
-  const shareDataWithUrl = {
+  const shareData = {
     files: [file],
-    title,
-    text: title,
-    ...(url ? { url } : {}),
-  };
-  const shareDataFileOnly = {
-    files: [file],
-    title,
-    text: title,
   };
 
-  if (url && navigator.canShare?.(shareDataWithUrl)) {
+  // Strictly share pure image file only, with NO url or text attached,
+  // so mobile OS (like iOS) triggers pure image sharing to WeChat, AirDrop, or Save to Photos.
+  if (navigator.canShare?.(shareData)) {
     try {
-      await navigator.share(shareDataWithUrl);
+      await navigator.share(shareData);
       return "shared" as const;
     } catch (err) {
-      if (err instanceof DOMException && err.name === "AbortError") throw err;
-      // Some platforms do not allow files and url simultaneously; fall back to files
+      if (err instanceof DOMException && err.name === "AbortError") {
+        return "aborted" as const;
+      }
     }
   }
 
-  if (navigator.canShare?.(shareDataFileOnly)) {
-    await navigator.share(shareDataFileOnly);
-    return "shared" as const;
-  }
-
-  if (typeof navigator.share === "function") {
-    const blobUrl = URL.createObjectURL(blob);
-    try {
-      await navigator.share({
-        title,
-        text: url ? `${title}\n${url}` : title,
-        url: url || blobUrl,
-      });
-      return "shared" as const;
-    } finally {
-      URL.revokeObjectURL(blobUrl);
-    }
-  }
   downloadBlob(blob, filename);
   return "saved" as const;
 }

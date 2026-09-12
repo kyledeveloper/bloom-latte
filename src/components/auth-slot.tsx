@@ -99,7 +99,7 @@ function AccountMenu() {
       {open ? (
         <div
           role="menu"
-          className="absolute top-[calc(100%+0.5rem)] right-0 z-40 w-52 rounded-xl bg-surface py-1.5 shadow-[var(--shadow-border)]"
+          className="absolute top-[calc(100%+0.5rem)] right-0 z-50 w-52 rounded-xl bg-surface py-1.5 shadow-[var(--shadow-border)]"
         >
           <p className="truncate px-3 py-1.5 text-xs text-muted">{label}</p>
           <div className="mx-2 mb-1 grid grid-cols-2 gap-0.5 rounded-lg bg-cream p-0.5">

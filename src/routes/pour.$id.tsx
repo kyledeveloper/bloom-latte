@@ -15,6 +15,7 @@ import {
 } from "@/lib/pours";
 import { deletePour, getPour, updatePour } from "@/lib/pours-api";
 import { cachedPour, cachePour } from "@/lib/pour-cache";
+import { removeCachedPour, upsertCachedPour } from "@/lib/photo-store";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { Route as RootRoute } from "@/routes/__root";
 import { AppShell } from "@/components/app-shell";
@@ -80,6 +81,10 @@ function PourDetail() {
       if (!isPending) setReady(true);
       return;
     }
+    if (locationPour ?? cachedPour(id)) {
+      setReady(true);
+      return;
+    }
     let cancelled = false;
     getPour({ data: id })
       .then((row) => {
@@ -100,7 +105,7 @@ function PourDetail() {
     return () => {
       cancelled = true;
     };
-  }, [id, signedIn, user?.id]);
+  }, [id, signedIn, user?.id, locationPour]);
 
   if (!ready && !pour) {
     return (
@@ -136,6 +141,7 @@ function PourDetail() {
       demo: false,
     };
     cachePour(next);
+    if (user) void upsertCachedPour(user.id, next);
     setPour(next);
     setEditing(false);
     notice("已更新。");
@@ -143,6 +149,7 @@ function PourDetail() {
 
   async function onDelete() {
     await deletePour({ data: id });
+    if (user) void removeCachedPour(user.id, id);
     setOpen(false);
     notice("删掉了。");
     void navigate({ to: "/" });
@@ -203,6 +210,7 @@ function PourDetail() {
             <PourPhoto
               src={pour.photo}
               alt={`${pattern.name}拉花`}
+              pourId={pour.demo ? undefined : pour.id}
               priority
               className="rounded-lg"
             />

@@ -39,7 +39,7 @@ export const Route = createFileRoute("/api/pours/$id/photo")({
         return new Response(buf, {
           headers: {
             "content-type": mime,
-            "cache-control": "private, max-age=86400",
+            "cache-control": "private, max-age=86400, stale-while-revalidate=604800",
           },
         });
       },

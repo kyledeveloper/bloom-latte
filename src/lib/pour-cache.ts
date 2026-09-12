@@ -29,11 +29,24 @@ function readStored(): Pour[] {
 function persist() {
   if (!canStore()) return;
   try {
-    const rows = [...cache.values()].filter((p) => !p.demo).slice(-8);
+    const rows = [...cache.values()]
+      .filter((p) => !p.demo)
+      .map((p) =>
+        p.photo.startsWith("data:")
+          ? { ...p, photo: `/api/pours/${p.id}/photo` }
+          : p,
+      )
+      .slice(0, 40);
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
   } catch {
     /* quota */
   }
+}
+
+export function cachedOwnPours(): Pour[] {
+  return [...cache.values()]
+    .filter((p) => !p.demo)
+    .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
 }
 
 if (canStore()) {

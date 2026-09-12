@@ -26,6 +26,7 @@ export function PourCard({
         <PourPhoto
           src={pourCardSrc(pour)}
           alt={`${pattern.name}拉花`}
+          pourId={pour.demo ? undefined : pour.id}
           priority={priority}
         />
         {pour.demo ? (

@@ -3,7 +3,7 @@ import { notice } from "@/components/notice-host";
 import type { PourDraft } from "@/lib/pours";
 import { addPour } from "@/lib/pours-api";
 import { cachePour } from "@/lib/pour-cache";
-import { saveLocalPhoto } from "@/lib/photo-store";
+import { saveLocalPhoto, upsertCachedPour } from "@/lib/photo-store";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { RedirectToSignIn } from "@/lib/auth/gates";
 import { Route as RootRoute } from "@/routes/__root";
@@ -26,6 +26,7 @@ function NewPour() {
       await saveLocalPhoto(pour.id, draft.photo);
       const stored = { ...pour, photo: draft.photo };
       cachePour(stored);
+      if (user) void upsertCachedPour(user.id, stored);
       notice("记下了。换手机登录同一个账号也能看见。");
       void navigate({
         to: "/pour/$id",

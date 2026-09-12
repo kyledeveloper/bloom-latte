@@ -1,10 +1,8 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Camera } from "lucide-react";
-import { PATTERNS, pourCardSrc, type PatternId } from "@/lib/pours";
+import { PATTERNS, pourCardSrc, type PatternId, type Pour } from "@/lib/pours";
 import { SEED_POURS } from "@/lib/seed";
-import { listPours } from "@/lib/pours-api";
-import { cachePours } from "@/lib/pour-cache";
 import { usePours } from "@/lib/use-pours";
 import { AppShell } from "@/components/app-shell";
 import { AuthSlot } from "@/components/auth-slot";
@@ -15,15 +13,10 @@ import { Button } from "@/components/ui/button";
 import { Wordmark } from "@/components/wordmark";
 
 export const Route = createFileRoute("/")({
-  loader: async () => {
-    try {
-      const pours = await listPours();
-      cachePours(pours);
-      return { signedIn: true as const, pours };
-    } catch {
-      return { signedIn: false as const, pours: [] };
-    }
-  },
+  loader: ({ context }) => ({
+    signedIn: Boolean(context.sessionUser),
+    pours: [] as Pour[],
+  }),
   head: () => ({
     links: SEED_POURS.slice(0, 4).map((p) => ({
       rel: "preload" as const,
@@ -76,7 +69,7 @@ function Home() {
           <Button asChild size="lg" className="hidden shrink-0 rounded-full sm:inline-flex">
             <Link to="/new">
               <Camera />
-              拍下这杯
+              记录
             </Link>
           </Button>
         </div>
@@ -97,7 +90,7 @@ function Home() {
 
         {showExamples ? (
           <div className="rounded-lg bg-cream/80 px-3 py-2.5 text-sm text-muted">
-            你的手记还是空的。下面是示例，点「拍下这杯」记第一杯。
+            你的手记还是空的。下面是示例，点「记录」记第一杯。
           </div>
         ) : (
           <PatternFilter value={filter} onChange={setFilter} counts={counts} />
@@ -166,7 +159,7 @@ function Home() {
         className="fab-in fixed z-20 flex h-12 items-center gap-2 rounded-full bg-primary px-4 text-sm font-medium text-primary-fg shadow-[var(--shadow-border)] transition-transform duration-150 hover:-translate-y-0.5 active:scale-[0.96] sm:hidden right-[max(1.25rem,env(safe-area-inset-right))] bottom-[max(1.25rem,env(safe-area-inset-bottom))]"
       >
         <Camera className="size-5" />
-        拍下这杯
+        记录
       </Link>
     </AppShell>
   );
@@ -208,7 +201,7 @@ function EmptyState({
       <Button asChild size="pill" className="mt-2">
         <Link to="/new">
           <Camera />
-          拍下这杯
+          记录
         </Link>
       </Button>
     </div>

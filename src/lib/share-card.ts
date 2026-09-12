@@ -38,7 +38,8 @@ function loadPhoto(src: string, pourId?: string): Promise<HTMLImageElement> {
     let url = src;
     if (pourId) {
       const local = await loadLocalPhoto(pourId);
-      if (local) url = local;
+      if (typeof local === "string") url = local;
+      else if (local) url = URL.createObjectURL(local);
     }
     if (url.startsWith("/api/")) {
       const headers = new Headers();

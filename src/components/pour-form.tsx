@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { emptyDraft, MILKS, type Pour, type PourDraft } from "@/lib/pours";
+import { loadLocalPhoto } from "@/lib/photo-store";
 import { PhotoField } from "@/components/photo-field";
 import { PatternPicker } from "@/components/pattern-picker";
 import { RatingPicker } from "@/components/rating";
@@ -55,6 +56,27 @@ export function PourForm({
   const [date, setDate] = useState(toDateInput(initial?.createdAt));
   const [missingPhoto, setMissingPhoto] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!initial?.id) return;
+    if (initial.photo.startsWith("data:")) return;
+    let alive = true;
+    void loadLocalPhoto(initial.id).then((local) => {
+      if (!alive || !local) return;
+      if (typeof local === "string") {
+        if (local.startsWith("data:")) set("photo", local);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (alive && typeof reader.result === "string") set("photo", reader.result);
+      };
+      reader.readAsDataURL(local);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [initial?.id, initial?.photo]);
 
   function set<K extends keyof PourDraft>(key: K, value: PourDraft[K]) {
     setDraft((prev) => ({ ...prev, [key]: value }));

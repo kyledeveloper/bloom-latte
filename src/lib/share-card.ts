@@ -5,6 +5,11 @@ import {
 import { getBearerToken } from "@/lib/auth/client";
 import { loadLocalPhoto } from "@/lib/photo-store";
 import { getLocale, milkLabel, patternLabel, translate } from "@/lib/i18n";
+import {
+  createQrMatrix,
+  drawQrBadge,
+  getWebsiteShareUrl,
+} from "@/lib/qr-code";
 
 const W = 1080;
 const H = 1440;
@@ -233,21 +238,43 @@ export async function renderPourShareCard(pour: Pour): Promise<Blob> {
     y += 56;
     ctx.fillStyle = INK;
     ctx.font = '400 32px "Noto Sans SC", sans-serif';
-    const lines = wrapChars(ctx, pour.notes, W - pad * 2, 3);
+    // Constrain notes width so it never overlaps the QR badge in the bottom-right
+    const lines = wrapChars(ctx, pour.notes, W - pad * 2 - 170, 3);
     for (const line of lines) {
       ctx.fillText(line, pad, y);
       y += 46;
     }
   }
 
+  // Draw QR code badge in the bottom right corner
+  const websiteUrl = getWebsiteShareUrl() || "https://bloom-latte.vercel.app";
+  const qrMatrix = createQrMatrix(websiteUrl, "M");
+  const qrSize = 136;
+  const qrX = W - pad - qrSize;
+  const qrY = H - pad - qrSize - 12;
+  drawQrBadge(ctx, qrMatrix, {
+    x: qrX,
+    y: qrY,
+    size: qrSize,
+    foregroundColor: PRIMARY,
+    backgroundColor: "#ffffff",
+    cardBackgroundColor: SURFACE,
+    borderColor: CREAM,
+    borderRadius: 16,
+    label: translate(locale, "scanToExplore"),
+    labelColor: MUTED,
+  });
+
   const footerY = H - 88;
+  const brandName = locale === "en" ? "Bloom Latte" : "杯中花";
   drawMark(ctx, pad, footerY - 22, 48);
   ctx.fillStyle = INK;
   ctx.font = '600 32px "Noto Serif SC", "Songti SC", serif';
-  ctx.fillText(locale === "en" ? "Bloom Latte" : "杯中花", pad + 62, footerY + 12);
+  ctx.fillText(brandName, pad + 62, footerY + 12);
+  const brandWidth = ctx.measureText(brandName).width;
   ctx.fillStyle = MUTED;
   ctx.font = '400 24px "Noto Sans SC", sans-serif';
-  ctx.fillText(translate(locale, "shareTag"), pad + 180, footerY + 12);
+  ctx.fillText(translate(locale, "shareTag"), pad + 62 + brandWidth + 24, footerY + 12);
 
   return new Promise((resolve, reject) => {
     canvas.toBlob(
@@ -271,23 +298,51 @@ export function shareFilename(pour: Pour) {
   return `${brand}-${pattern}${stamp}.jpg`;
 }
 
-export async function nativeShareImage(blob: Blob, filename: string, title: string) {
+export async function nativeShareImage(
+  blob: Blob,
+  filename: string,
+  title: string,
+  url?: string,
+) {
   const file = new File([blob], filename, { type: blob.type || "image/jpeg" });
-  if (navigator.canShare?.({ files: [file] })) {
-    await navigator.share({
-      files: [file],
-      title,
-      text: title,
-    });
+  const shareDataWithUrl = {
+    files: [file],
+    title,
+    text: title,
+    ...(url ? { url } : {}),
+  };
+  const shareDataFileOnly = {
+    files: [file],
+    title,
+    text: title,
+  };
+
+  if (url && navigator.canShare?.(shareDataWithUrl)) {
+    try {
+      await navigator.share(shareDataWithUrl);
+      return "shared" as const;
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") throw err;
+      // Some platforms do not allow files and url simultaneously; fall back to files
+    }
+  }
+
+  if (navigator.canShare?.(shareDataFileOnly)) {
+    await navigator.share(shareDataFileOnly);
     return "shared" as const;
   }
+
   if (typeof navigator.share === "function") {
-    const url = URL.createObjectURL(blob);
+    const blobUrl = URL.createObjectURL(blob);
     try {
-      await navigator.share({ title, text: title, url });
+      await navigator.share({
+        title,
+        text: url ? `${title}\n${url}` : title,
+        url: url || blobUrl,
+      });
       return "shared" as const;
     } finally {
-      URL.revokeObjectURL(url);
+      URL.revokeObjectURL(blobUrl);
     }
   }
   downloadBlob(blob, filename);

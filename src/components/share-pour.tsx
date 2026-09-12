@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Share2 } from "lucide-react";
+import { Link2, Share2 } from "lucide-react";
 import { notice } from "@/lib/notice";
 import {
   canNativeShare,
@@ -8,6 +8,7 @@ import {
   renderPourShareCard,
   shareFilename,
 } from "@/lib/share-card";
+import { getWebsiteShareUrl } from "@/lib/qr-code";
 import { type Pour } from "@/lib/pours";
 import { patternLabel, useLocale, useT } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,7 @@ export function SharePourButton({
   const t = useT();
   const locale = useLocale();
   const title = `${t("bloom")} · ${patternLabel(pour.pattern, locale)}`;
+  const shareUrl = getWebsiteShareUrl();
 
   useEffect(() => {
     return () => {
@@ -62,7 +64,12 @@ export function SharePourButton({
   async function sendToFriends() {
     if (!blob) return;
     try {
-      const result = await nativeShareImage(blob, shareFilename(pour), title);
+      const result = await nativeShareImage(
+        blob,
+        shareFilename(pour),
+        title,
+        shareUrl,
+      );
       if (result !== "shared") notice(t("shareSavedSend"));
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
@@ -75,6 +82,28 @@ export function SharePourButton({
     if (!blob) return;
     downloadBlob(blob, shareFilename(pour));
     notice(t("shareDownloaded"));
+  }
+
+  async function copyShareLink() {
+    if (!shareUrl) return;
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = shareUrl;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+      }
+      notice(t("linkCopied"));
+    } catch {
+      notice(t("linkCopied"));
+    }
   }
 
   return (
@@ -134,6 +163,25 @@ export function SharePourButton({
               <div className="aspect-[3/4] w-full" />
             )}
           </div>
+
+          {shareUrl ? (
+            <div className="flex items-center justify-between gap-2 rounded-lg border border-border/70 bg-surface px-3 py-2 text-xs">
+              <div className="flex min-w-0 items-center gap-1.5 text-muted">
+                <Link2 className="size-3.5 shrink-0" />
+                <span className="truncate">{shareUrl.replace(/^https?:\/\//, "")}</span>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 shrink-0 px-2.5 text-xs font-medium hover:bg-cream"
+                onClick={() => void copyShareLink()}
+              >
+                {t("copyLink")}
+              </Button>
+            </div>
+          ) : null}
+
           <div className="grid grid-cols-2 gap-2">
             <Button
               type="button"

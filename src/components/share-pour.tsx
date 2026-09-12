@@ -73,16 +73,6 @@ export function SharePourButton({
     }
   }
 
-  function saveImage() {
-    if (!blob) return;
-    downloadBlob(blob, shareFilename(pour));
-    notice(
-      locale === "en"
-        ? "Poster saved. You can also long-press the image to save directly to Photos."
-        : "海报已保存。手机长按上方图片可直接「存储到系统相册」。",
-    );
-  }
-
   return (
     <>
       {variant === "cta" ? (
@@ -146,23 +136,15 @@ export function SharePourButton({
               : "📱 手机长按上方图片，点击「存储图像」可直接存入相册"}
           </p>
 
-          <div className="grid grid-cols-2 gap-2 shrink-0 mt-1">
-            <Button
-              type="button"
-              variant="secondary"
-              disabled={!blob || busy}
-              onClick={saveImage}
-            >
-              {t("saveImage")}
-            </Button>
-            <Button
-              type="button"
-              disabled={!blob || busy}
-              onClick={() => void sendToFriends()}
-            >
-              {canNativeShare() ? (locale === "en" ? "Share Image" : "分享海报") : t("downloadShare")}
-            </Button>
-          </div>
+          <Button
+            type="button"
+            size="default"
+            className="w-full shrink-0 mt-1 rounded-full font-medium"
+            disabled={!blob || busy}
+            onClick={() => void sendToFriends()}
+          >
+            {canNativeShare() ? (locale === "en" ? "Share Image" : "分享海报") : t("downloadShare")}
+          </Button>
         </DialogContent>
       </Dialog>
     </>

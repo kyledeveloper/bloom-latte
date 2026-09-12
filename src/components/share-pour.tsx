@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link2, Share2 } from "lucide-react";
 import { notice } from "@/lib/notice";
 import {
@@ -8,9 +8,11 @@ import {
   renderPourShareCard,
   shareFilename,
 } from "@/lib/share-card";
-import { getWebsiteShareUrl } from "@/lib/qr-code";
 import { type Pour } from "@/lib/pours";
 import { patternLabel, useLocale, useT } from "@/lib/i18n";
+import { usePours } from "@/lib/use-pours";
+import { useCurrentUserState } from "@/lib/auth/use-current-user";
+import { buildPourSharePayload, encodeShareUrl } from "@/lib/share-payload";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -36,8 +38,19 @@ export function SharePourButton({
   const [blob, setBlob] = useState<Blob | null>(null);
   const t = useT();
   const locale = useLocale();
+  const { pours } = usePours();
+  const { user } = useCurrentUserState();
+
+  const userName = user?.name || user?.email?.split("@")[0] || "";
+  const sharePayload = useMemo(
+    () => buildPourSharePayload(pour, pours, userName),
+    [pour, pours, userName],
+  );
+  const shareUrl = useMemo(
+    () => encodeShareUrl(sharePayload),
+    [sharePayload],
+  );
   const title = `${t("bloom")} · ${patternLabel(pour.pattern, locale)}`;
-  const shareUrl = getWebsiteShareUrl();
 
   useEffect(() => {
     return () => {
@@ -50,7 +63,7 @@ export function SharePourButton({
     if (blob && preview) return;
     setBusy(true);
     try {
-      const next = await renderPourShareCard(pour);
+      const next = await renderPourShareCard(pour, { shareUrl });
       setBlob(next);
       setPreview(URL.createObjectURL(next));
     } catch {

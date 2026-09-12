@@ -1,10 +1,12 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Camera } from "lucide-react";
 import { PATTERNS, pourCardSrc, type PatternId } from "@/lib/pours";
 import { SEED_POURS } from "@/lib/seed";
 import { usePours } from "@/lib/use-pours";
 import { patternLabel, useLocale, useT } from "@/lib/i18n";
+import { decodeSharePayload, type SharedPourData } from "@/lib/share-payload";
+import { SharedPourHero } from "@/components/shared-pour-hero";
 import { AppShell } from "@/components/app-shell";
 import { AuthSlot } from "@/components/auth-slot";
 import { PourCard } from "@/components/pour-card";
@@ -30,6 +32,20 @@ function Home() {
   const t = useT();
   const locale = useLocale();
   const [filter, setFilter] = useState<PatternId | "all">("all");
+  const [sharedPour, setSharedPour] = useState<SharedPourData | null>(() => {
+    if (typeof window !== "undefined") {
+      return decodeSharePayload(window.location.search);
+    }
+    return null;
+  });
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const decoded = decodeSharePayload(window.location.search);
+      if (decoded) setSharedPour(decoded);
+    }
+  }, []);
+
   const hasOwnPours = pours.length > 0;
   const ownPours = hasOwnPours ? pours : SEED_POURS;
   const gallery = hasOwnPours ? pours : SEED_POURS;
@@ -79,6 +95,18 @@ function Home() {
       }
     >
       <div className="flex flex-col gap-6">
+        {sharedPour ? (
+          <SharedPourHero
+            data={sharedPour}
+            onDismiss={() => {
+              setSharedPour(null);
+              if (typeof window !== "undefined" && window.history?.replaceState) {
+                window.history.replaceState({}, document.title, window.location.pathname);
+              }
+            }}
+          />
+        ) : null}
+
         <div className="flex flex-col gap-4">
           <p className="max-w-md text-muted">{t("tagline")}</p>
         </div>

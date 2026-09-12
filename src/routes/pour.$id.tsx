@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  useNavigate,
+  useRouterState,
+} from "@tanstack/react-router";
 import { Pencil, Trash2 } from "lucide-react";
-import { toast } from "sonner";
+import { notice } from "@/components/notice-host";
 import {
   formatPourDate,
   patternOf,
@@ -9,8 +14,9 @@ import {
   type PourDraft,
 } from "@/lib/pours";
 import { deletePour, getPour, updatePour } from "@/lib/pours-api";
-import { SEED_POURS } from "@/lib/seed";
+import { cachedPour, cachePour } from "@/lib/pour-cache";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
+import { Route as RootRoute } from "@/routes/__root";
 import { AppShell } from "@/components/app-shell";
 import { AuthSlot } from "@/components/auth-slot";
 import { PourForm } from "@/components/pour-form";
@@ -30,53 +36,77 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-export const Route = createFileRoute("/pour/$id")({ component: PourDetail });
+export const Route = createFileRoute("/pour/$id")({
+  ssr: false,
+  component: PourDetail,
+});
+
+function pourFromLocation(id: string, state: unknown): Pour | null {
+  if (!state || typeof state !== "object" || !("pour" in state)) return null;
+  const pour = (state as { pour?: Pour }).pour;
+  return pour?.id === id ? pour : null;
+}
 
 function PourDetail() {
   const { id } = Route.useParams();
+  const locationPour = useRouterState({
+    select: (s) => pourFromLocation(id, s.location.state),
+  });
+  const { sessionUser } = RootRoute.useRouteContext();
   const { user, isPending } = useCurrentUserState();
-  const [pour, setPour] = useState<Pour | null>(null);
-  const [ready, setReady] = useState(false);
+  const [pour, setPour] = useState<Pour | null>(
+    () => locationPour ?? cachedPour(id),
+  );
+  const [ready, setReady] = useState(() => Boolean(locationPour ?? cachedPour(id)));
   const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
   const [open, setOpen] = useState(false);
   const canEdit = Boolean(user) && Boolean(pour) && !pour?.demo;
+  const signedIn = Boolean(user ?? sessionUser);
 
   useEffect(() => {
-    if (isPending) return;
-    let cancelled = false;
-    setReady(false);
-    if (!user) {
-      const seed = SEED_POURS.find((p) => p.id === id) ?? null;
-      if (!cancelled) {
-        setPour(seed);
-        setReady(true);
-      }
+    const hit = locationPour ?? cachedPour(id);
+    if (!hit) return;
+    cachePour(hit);
+    setPour((prev) => ({
+      ...hit,
+      photo: prev?.photo || hit.photo,
+    }));
+    setReady(true);
+  }, [id, locationPour]);
+
+  useEffect(() => {
+    if (!signedIn) {
+      if (!isPending) setReady(true);
       return;
     }
+    let cancelled = false;
     getPour({ data: id })
       .then((row) => {
-        if (!cancelled) {
-          setPour(row ?? SEED_POURS.find((p) => p.id === id) ?? null);
-        }
+        if (cancelled || !row) return;
+        setPour((prev) => {
+          const next = {
+            ...row,
+            photo: prev?.photo || row.photo,
+          };
+          cachePour(next);
+          return next;
+        });
+        setReady(true);
       })
       .catch(() => {
-        if (!cancelled) {
-          setPour(SEED_POURS.find((p) => p.id === id) ?? null);
-        }
-      })
-      .finally(() => {
         if (!cancelled) setReady(true);
       });
     return () => {
       cancelled = true;
     };
-  }, [id, user, isPending]);
+  }, [id, signedIn, user?.id]);
 
-  if (!ready) {
+  if (!ready && !pour) {
     return (
       <AppShell title="拉花" backTo="/" action={<AuthSlot />}>
-        <div className="aspect-square rounded-2xl bg-cream" />
+        <div className="aspect-square animate-pulse rounded-2xl bg-cream" />
+        <p className="mt-4 text-sm text-muted">正在打开这杯…</p>
       </AppShell>
     );
   }
@@ -99,20 +129,22 @@ function PourDetail() {
   async function onSave(draft: PourDraft) {
     if (!pour) return;
     await updatePour({ data: { ...draft, id } });
-    setPour({
+    const next = {
       ...pour,
       ...draft,
       createdAt: draft.createdAt ?? pour.createdAt,
       demo: false,
-    });
+    };
+    cachePour(next);
+    setPour(next);
     setEditing(false);
-    toast("已更新。");
+    notice("已更新。");
   }
 
   async function onDelete() {
     await deletePour({ data: id });
     setOpen(false);
-    toast("删掉了。");
+    notice("删掉了。");
     void navigate({ to: "/" });
   }
 

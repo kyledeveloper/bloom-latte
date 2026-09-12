@@ -62,23 +62,30 @@ export function newId() {
   return crypto.randomUUID();
 }
 
-export async function compressImage(
-  file: File,
-  maxEdge = 960,
-  quality = 0.74,
-): Promise<string> {
+export async function compressImage(file: File): Promise<string> {
   const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, maxEdge / Math.max(bitmap.width, bitmap.height));
-  const width = Math.max(1, Math.round(bitmap.width * scale));
-  const height = Math.max(1, Math.round(bitmap.height * scale));
   const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
   const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("无法处理照片");
-  ctx.drawImage(bitmap, 0, 0, width, height);
+  if (!ctx) {
+    bitmap.close();
+    throw new Error("无法处理照片");
+  }
+  let data = "";
+  for (const edge of [800, 640, 480]) {
+    const scale = Math.min(1, edge / Math.max(bitmap.width, bitmap.height));
+    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    for (const quality of [0.7, 0.58, 0.46]) {
+      data = canvas.toDataURL("image/jpeg", quality);
+      if (data.length <= 280_000) {
+        bitmap.close();
+        return data;
+      }
+    }
+  }
   bitmap.close();
-  return canvas.toDataURL("image/jpeg", quality);
+  return data;
 }
 
 export function formatPourDate(iso: string) {

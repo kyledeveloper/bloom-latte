@@ -14,6 +14,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as NewRouteImport } from './routes/new'
 import { Route as PourIdRouteImport } from './routes/pour.$id'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ApiPoursIdPhotoRouteImport } from './routes/api/pours.$id.photo'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -40,6 +41,11 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPoursIdPhotoRoute = ApiPoursIdPhotoRouteImport.update({
+  id: '/api/pours/$id/photo',
+  path: '/api/pours/$id/photo',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -47,6 +53,7 @@ export interface FileRoutesByFullPath {
   '/new': typeof NewRoute
   '/pour/$id': typeof PourIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/pours/$id/photo': typeof ApiPoursIdPhotoRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +61,7 @@ export interface FileRoutesByTo {
   '/new': typeof NewRoute
   '/pour/$id': typeof PourIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/pours/$id/photo': typeof ApiPoursIdPhotoRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,13 +70,33 @@ export interface FileRoutesById {
   '/new': typeof NewRoute
   '/pour/$id': typeof PourIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/pours/$id/photo': typeof ApiPoursIdPhotoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/new' | '/pour/$id' | '/api/auth/$'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/new'
+    | '/pour/$id'
+    | '/api/auth/$'
+    | '/api/pours/$id/photo'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/new' | '/pour/$id' | '/api/auth/$'
-  id: '__root__' | '/' | '/login' | '/new' | '/pour/$id' | '/api/auth/$'
+  to:
+    | '/'
+    | '/login'
+    | '/new'
+    | '/pour/$id'
+    | '/api/auth/$'
+    | '/api/pours/$id/photo'
+  id:
+    | '__root__'
+    | '/'
+    | '/login'
+    | '/new'
+    | '/pour/$id'
+    | '/api/auth/$'
+    | '/api/pours/$id/photo'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -77,6 +105,7 @@ export interface RootRouteChildren {
   NewRoute: typeof NewRoute
   PourIdRoute: typeof PourIdRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiPoursIdPhotoRoute: typeof ApiPoursIdPhotoRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -116,6 +145,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/pours/$id/photo': {
+      id: '/api/pours/$id/photo'
+      path: '/api/pours/$id/photo'
+      fullPath: '/api/pours/$id/photo'
+      preLoaderRoute: typeof ApiPoursIdPhotoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -125,6 +161,7 @@ const rootRouteChildren: RootRouteChildren = {
   NewRoute: NewRoute,
   PourIdRoute: PourIdRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiPoursIdPhotoRoute: ApiPoursIdPhotoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

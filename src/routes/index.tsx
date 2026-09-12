@@ -4,6 +4,7 @@ import { Camera } from "lucide-react";
 import { PATTERNS, pourCardSrc, type PatternId } from "@/lib/pours";
 import { SEED_POURS } from "@/lib/seed";
 import { listPours } from "@/lib/pours-api";
+import { cachePours } from "@/lib/pour-cache";
 import { usePours } from "@/lib/use-pours";
 import { AppShell } from "@/components/app-shell";
 import { AuthSlot } from "@/components/auth-slot";
@@ -17,6 +18,7 @@ export const Route = createFileRoute("/")({
   loader: async () => {
     try {
       const pours = await listPours();
+      cachePours(pours);
       return { signedIn: true as const, pours };
     } catch {
       return { signedIn: false as const, pours: [] };

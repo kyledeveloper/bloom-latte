@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getSql } from "@/lib/db";
 import { authMiddleware } from "@/lib/auth/middleware";
 import { newId, PATTERN_IDS, type PatternId, type Pour, type PourDraft } from "@/lib/pours";
+import { displayPhotoSrc } from "@/lib/photo-store";
 
 type PourRow = {
   id: string;
@@ -28,7 +29,7 @@ function toPour(row: PourRow): Pour {
   return {
     id: row.id,
     createdAt: created,
-    photo: row.photo,
+    photo: displayPhotoSrc(row.id, row.photo),
     pattern,
     rating: Number(row.rating),
     beans: row.beans,
@@ -70,7 +71,7 @@ export const listPours = createServerFn({ method: "GET" })
     return rows.map(toPour);
   });
 
-export const getPour = createServerFn({ method: "GET" })
+export const getPour = createServerFn({ method: "POST" })
   .validator((id: string) => id)
   .middleware([authMiddleware])
   .handler(async ({ context, data: id }) => {
@@ -109,7 +110,7 @@ export const addPour = createServerFn({ method: "POST" })
     return {
       id,
       createdAt,
-      photo: draft.photo,
+      photo: displayPhotoSrc(id, draft.photo),
       pattern: draft.pattern,
       rating: draft.rating,
       beans: draft.beans,

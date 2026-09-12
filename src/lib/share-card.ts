@@ -3,6 +3,8 @@ import {
   patternOf,
   type Pour,
 } from "@/lib/pours";
+import { getBearerToken } from "@/lib/auth/client";
+import { loadLocalPhoto } from "@/lib/photo-store";
 
 const W = 1080;
 const H = 1440;
@@ -31,14 +33,30 @@ function roundRect(
   ctx.closePath();
 }
 
-function loadPhoto(src: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    if (!src.startsWith("data:")) img.crossOrigin = "anonymous";
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error("照片加载失败"));
-    img.src = src;
-  });
+function loadPhoto(src: string, pourId?: string): Promise<HTMLImageElement> {
+  return (async () => {
+    let url = src;
+    if (pourId) {
+      const local = await loadLocalPhoto(pourId);
+      if (local) url = local;
+    }
+    if (url.startsWith("/api/")) {
+      const headers = new Headers();
+      const token = getBearerToken();
+      if (token) headers.set("Authorization", `Bearer ${token}`);
+      const href = token ? `${url}${url.includes("?") ? "&" : "?"}bt=${encodeURIComponent(token)}` : url;
+      const res = await fetch(href, { headers, credentials: "include" });
+      if (!res.ok) throw new Error("照片加载失败");
+      url = URL.createObjectURL(await res.blob());
+    }
+    return new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new Image();
+      if (!url.startsWith("data:")) img.crossOrigin = "anonymous";
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("照片加载失败"));
+      img.src = url;
+    });
+  })();
 }
 
 function cover(
@@ -148,7 +166,7 @@ async function waitForFonts() {
 
 export async function renderPourShareCard(pour: Pour): Promise<Blob> {
   await waitForFonts();
-  const photo = await loadPhoto(pour.photo);
+  const photo = await loadPhoto(pour.photo, pour.demo ? undefined : pour.id);
   const canvas = document.createElement("canvas");
   canvas.width = W;
   canvas.height = H;

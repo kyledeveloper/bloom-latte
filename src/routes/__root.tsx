@@ -7,7 +7,7 @@ import {
 import { createServerFn } from "@tanstack/react-start";
 import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
-import { Toaster } from "sonner";
+import { NoticeHost } from "@/components/notice-host";
 import appCss from "../styles.css?url";
 
 const APP_NAME = "杯中花";
@@ -61,13 +61,7 @@ function RootDocument() {
         <PreviewHostBridge />
         <AuthProvider>
           <Outlet />
-          <Toaster
-            position="top-center"
-            toastOptions={{
-              className:
-                "font-sans !bg-surface !text-fg !border-border shadow-[var(--shadow-border)]",
-            }}
-          />
+          <NoticeHost />
         </AuthProvider>
         <Scripts />
       </body>

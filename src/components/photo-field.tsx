@@ -43,11 +43,18 @@ export function PhotoField({
         )}
       >
         {value ? (
-          <img
-            src={value}
-            alt="这杯拉花"
-            className="pour-photo size-full object-cover"
-          />
+          <button
+            type="button"
+            onClick={() => libraryRef.current?.click()}
+            className="size-full"
+            aria-label="更换照片"
+          >
+            <img
+              src={value}
+              alt="这杯拉花"
+              className="pour-photo size-full object-cover"
+            />
+          </button>
         ) : (
           <div className="flex size-full flex-col items-center justify-center gap-2 px-8 text-center">
             <span className="text-muted">

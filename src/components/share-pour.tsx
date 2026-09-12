@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Share2 } from "lucide-react";
-import { toast } from "sonner";
+import { notice } from "@/components/notice-host";
 import {
   canNativeShare,
   downloadBlob,
@@ -50,7 +50,7 @@ export function SharePourButton({
       setBlob(next);
       setPreview(URL.createObjectURL(next));
     } catch {
-      toast("这张图没生成出来，再试一次。");
+      notice("这张图没生成出来，再试一次。");
       setOpen(false);
     } finally {
       setBusy(false);
@@ -61,19 +61,18 @@ export function SharePourButton({
     if (!blob) return;
     try {
       const result = await nativeShareImage(blob, shareFilename(pour), title);
-      if (result === "shared") toast("已打开分享。");
-      else toast("图片已保存，发给朋友吧。");
+      if (result !== "shared") notice("图片已保存，发给朋友吧。");
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
       downloadBlob(blob, shareFilename(pour));
-      toast("图片已保存。");
+      notice("图片已保存。");
     }
   }
 
   function saveImage() {
     if (!blob) return;
     downloadBlob(blob, shareFilename(pour));
-    toast("已保存到相册 / 下载。");
+    notice("已保存到相册 / 下载。");
   }
 
   return (

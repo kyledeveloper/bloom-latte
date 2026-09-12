@@ -1,15 +1,14 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Route as RootRoute } from "@/routes/__root";
 import { UserButton } from "@/lib/auth/gates";
-import { useCurrentUserState } from "@/lib/auth/use-current-user";
+import { readAuthHint, useCurrentUserState } from "@/lib/auth/use-current-user";
 import { coldBackup } from "@/lib/local-backup";
 import { notice } from "@/components/notice-host";
 import { Button } from "@/components/ui/button";
 
 export function AuthSlot() {
-  const { sessionUser } = RootRoute.useRouteContext();
-  const { user } = useCurrentUserState();
+  const { user, isPending } = useCurrentUserState();
+  const hint = !user ? readAuthHint() : null;
   const [backingUp, setBackingUp] = useState(false);
 
   async function onBackup() {
@@ -45,8 +44,8 @@ export function AuthSlot() {
     );
   }
 
-  if (sessionUser) {
-    const label = sessionUser.email ?? "账号";
+  if (isPending && hint) {
+    const label = hint.displayName ?? hint.primaryEmail ?? "账号";
     return (
       <div className="flex items-center gap-2">
         <span className="grid h-8 w-8 place-items-center rounded-full bg-cream text-sm font-medium">
@@ -56,6 +55,8 @@ export function AuthSlot() {
       </div>
     );
   }
+
+  if (isPending) return <span className="inline-block size-8 rounded-full bg-cream" />;
 
   return (
     <Button asChild variant="secondary" size="sm">

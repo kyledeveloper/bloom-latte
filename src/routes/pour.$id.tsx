@@ -17,7 +17,6 @@ import { cachedPour, cachePour } from "@/lib/pour-cache";
 import { loadJournal } from "@/lib/photo-store";
 import { forgetPour, rememberPour } from "@/lib/local-backup";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
-import { Route as RootRoute } from "@/routes/__root";
 import { AppShell } from "@/components/app-shell";
 import { AuthSlot } from "@/components/auth-slot";
 import { PourForm } from "@/components/pour-form";
@@ -53,7 +52,6 @@ function PourDetail() {
   const locationPour = useRouterState({
     select: (s) => pourFromLocation(id, s.location.state),
   });
-  const { sessionUser } = RootRoute.useRouteContext();
   const { user, isPending } = useCurrentUserState();
   const [pour, setPour] = useState<Pour | null>(
     () => locationPour ?? cachedPour(id),
@@ -63,7 +61,7 @@ function PourDetail() {
   const [editing, setEditing] = useState(false);
   const [open, setOpen] = useState(false);
   const canEdit = Boolean(user) && Boolean(pour) && !pour?.demo;
-  const signedIn = Boolean(user ?? sessionUser);
+  const signedIn = Boolean(user);
 
   useEffect(() => {
     const hit = locationPour ?? cachedPour(id);
@@ -86,7 +84,7 @@ function PourDetail() {
       return;
     }
     let cancelled = false;
-    const userId = user?.id ?? sessionUser?.id;
+    const userId = user?.id;
     void (async () => {
       if (userId) {
         const journal = await loadJournal(userId);
@@ -104,7 +102,7 @@ function PourDetail() {
     return () => {
       cancelled = true;
     };
-  }, [id, signedIn, user?.id, sessionUser?.id, locationPour, isPending]);
+  }, [id, signedIn, user?.id, locationPour, isPending]);
 
   if (!ready && !pour) {
     return (

@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Camera } from "lucide-react";
-import { PATTERNS, pourCardSrc, type PatternId, type Pour } from "@/lib/pours";
+import { PATTERNS, pourCardSrc, type PatternId } from "@/lib/pours";
 import { SEED_POURS } from "@/lib/seed";
 import { usePours } from "@/lib/use-pours";
 import { AppShell } from "@/components/app-shell";
@@ -13,10 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Wordmark } from "@/components/wordmark";
 
 export const Route = createFileRoute("/")({
-  loader: ({ context }) => ({
-    signedIn: Boolean(context.sessionUser),
-    pours: [] as Pour[],
-  }),
+  ssr: false,
   head: () => ({
     links: SEED_POURS.slice(0, 4).map((p) => ({
       rel: "preload" as const,
@@ -28,8 +25,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Home() {
-  const initial = Route.useLoaderData();
-  const { pours, ready, signedIn } = usePours(initial);
+  const { pours, ready, signedIn } = usePours();
   const [filter, setFilter] = useState<PatternId | "all">("all");
   const ownPours = signedIn ? pours : SEED_POURS;
   const gallery = signedIn ? pours : SEED_POURS;
@@ -61,17 +57,25 @@ function Home() {
     <AppShell
       editorial
       width="wide"
-      action={<AuthSlot />}
-    >
-      <div className="flex flex-col gap-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-4">
-          <p className="max-w-md text-muted">倒一杯，开一朵。</p>
-          <Button asChild size="lg" className="hidden shrink-0 rounded-full sm:inline-flex">
+      action={
+        <div className="flex flex-col items-end gap-2">
+          <AuthSlot />
+          <Button
+            asChild
+            size="sm"
+            className="hidden rounded-full sm:inline-flex"
+          >
             <Link to="/new">
               <Camera />
               记录
             </Link>
           </Button>
+        </div>
+      }
+    >
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-4">
+          <p className="max-w-md text-muted">倒一杯，开一朵。</p>
         </div>
 
         {ready ? <StatsBar pours={ownPours} /> : <StatsSkeleton />}

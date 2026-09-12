@@ -5,19 +5,28 @@ import { cachePour } from "@/lib/pour-cache";
 import { rememberPour } from "@/lib/local-backup";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { RedirectToSignIn } from "@/lib/auth/gates";
-import { Route as RootRoute } from "@/routes/__root";
 import { AppShell } from "@/components/app-shell";
 import { AuthSlot } from "@/components/auth-slot";
 import { PourForm } from "@/components/pour-form";
 
-export const Route = createFileRoute("/new")({ component: NewPour });
+export const Route = createFileRoute("/new")({
+  ssr: false,
+  component: NewPour,
+});
 
 function NewPour() {
   const navigate = useNavigate();
-  const { sessionUser } = RootRoute.useRouteContext();
-  const { user } = useCurrentUserState();
+  const { user, isPending } = useCurrentUserState();
 
-  if (!user && !sessionUser) return <RedirectToSignIn />;
+  if (isPending) {
+    return (
+      <AppShell title="记录一杯" backTo="/" action={<AuthSlot />}>
+        <div className="mx-auto aspect-square w-full max-w-sm rounded-2xl bg-cream" />
+      </AppShell>
+    );
+  }
+
+  if (!user) return <RedirectToSignIn />;
 
   async function onSubmit(draft: PourDraft) {
     if (!user) throw new Error("请先登录");
@@ -45,14 +54,6 @@ function NewPour() {
       notice(err instanceof Error ? err.message : "没保存上，再试一次。");
       throw err;
     }
-  }
-
-  if (!user) {
-    return (
-      <AppShell title="记录一杯" backTo="/" action={<AuthSlot />}>
-        <div className="mx-auto aspect-square w-full max-w-sm rounded-2xl bg-cream" />
-      </AppShell>
-    );
   }
 
   return (

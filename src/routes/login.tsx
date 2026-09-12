@@ -7,7 +7,6 @@ import {
 } from "@/lib/auth/client";
 import { emailAndPasswordEnabled } from "@/lib/auth/email-password";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
-import { Route as RootRoute } from "@/routes/__root";
 import { notice } from "@/components/notice-host";
 import { Wordmark } from "@/components/wordmark";
 import { Button } from "@/components/ui/button";
@@ -26,16 +25,12 @@ function socialLoginAllowed(grokOAuth: boolean) {
 }
 
 export const Route = createFileRoute("/login")({
-  loader: () => ({
-    grokOAuth: Boolean(process.env.GROK_AUTH_CLIENT_ID?.trim()),
-  }),
+  ssr: false,
   component: Login,
 });
 
 function Login() {
-  const { grokOAuth } = Route.useLoaderData();
-  const { sessionUser } = RootRoute.useRouteContext();
-  const { user } = useCurrentUserState();
+  const { user, isPending } = useCurrentUserState();
   const [mode, setMode] = useState<"in" | "up">("in");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -43,10 +38,11 @@ function Login() {
   const [showSocial, setShowSocial] = useState(false);
 
   useEffect(() => {
-    setShowSocial(socialLoginAllowed(grokOAuth));
-  }, [grokOAuth]);
+    setShowSocial(socialLoginAllowed(false));
+  }, []);
 
-  if (user || sessionUser) return <Navigate to="/" />;
+  if (isPending) return null;
+  if (user) return <Navigate to="/" />;
 
   async function onEmailSubmit(event: FormEvent) {
     event.preventDefault();

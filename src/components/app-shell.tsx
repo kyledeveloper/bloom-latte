@@ -32,7 +32,7 @@ export function AppShell({
       <header
         className={cn(
           "page-enter mb-6 flex items-center gap-3",
-          editorial ? "items-center justify-between sm:items-end" : "min-h-11",
+          editorial ? "items-center justify-between sm:items-start" : "min-h-11",
         )}
       >
         {editorial ? (

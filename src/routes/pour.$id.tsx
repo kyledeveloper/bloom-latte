@@ -13,9 +13,9 @@ import {
   type Pour,
   type PourDraft,
 } from "@/lib/pours";
-import { deletePour, getPour, updatePour } from "@/lib/pours-api";
 import { cachedPour, cachePour } from "@/lib/pour-cache";
-import { removeCachedPour, upsertCachedPour } from "@/lib/photo-store";
+import { loadJournal } from "@/lib/photo-store";
+import { forgetPour, rememberPour } from "@/lib/local-backup";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { Route as RootRoute } from "@/routes/__root";
 import { AppShell } from "@/components/app-shell";
@@ -86,26 +86,25 @@ function PourDetail() {
       return;
     }
     let cancelled = false;
-    getPour({ data: id })
-      .then((row) => {
-        if (cancelled || !row) return;
-        setPour((prev) => {
-          const next = {
-            ...row,
-            photo: prev?.photo || row.photo,
-          };
-          cachePour(next);
-          return next;
-        });
-        setReady(true);
-      })
-      .catch(() => {
-        if (!cancelled) setReady(true);
-      });
+    const userId = user?.id ?? sessionUser?.id;
+    void (async () => {
+      if (userId) {
+        const journal = await loadJournal(userId);
+        const hit = journal?.pours.find((p) => p.id === id);
+        if (cancelled) return;
+        if (hit) {
+          cachePour(hit);
+          setPour(hit);
+          setReady(true);
+          return;
+        }
+      }
+      if (!cancelled) setReady(true);
+    })();
     return () => {
       cancelled = true;
     };
-  }, [id, signedIn, user?.id, locationPour]);
+  }, [id, signedIn, user?.id, sessionUser?.id, locationPour, isPending]);
 
   if (!ready && !pour) {
     return (
@@ -132,8 +131,7 @@ function PourDetail() {
   const pattern = patternOf(pour.pattern);
 
   async function onSave(draft: PourDraft) {
-    if (!pour) return;
-    await updatePour({ data: { ...draft, id } });
+    if (!pour || !user) return;
     const next = {
       ...pour,
       ...draft,
@@ -141,15 +139,14 @@ function PourDetail() {
       demo: false,
     };
     cachePour(next);
-    if (user) void upsertCachedPour(user.id, next);
+    await rememberPour(user.id, next);
     setPour(next);
     setEditing(false);
-    notice("已更新。");
+    notice("已更新。这台设备已保存，云端稍后备份。");
   }
 
   async function onDelete() {
-    await deletePour({ data: id });
-    if (user) void removeCachedPour(user.id, id);
+    if (user) await forgetPour(user.id, id);
     setOpen(false);
     notice("删掉了。");
     void navigate({ to: "/" });

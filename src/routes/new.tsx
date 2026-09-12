@@ -1,9 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { notice } from "@/components/notice-host";
-import type { PourDraft } from "@/lib/pours";
-import { addPour } from "@/lib/pours-api";
+import { newId, type Pour, type PourDraft } from "@/lib/pours";
 import { cachePour } from "@/lib/pour-cache";
-import { saveLocalPhoto, upsertCachedPour } from "@/lib/photo-store";
+import { rememberPour } from "@/lib/local-backup";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { RedirectToSignIn } from "@/lib/auth/gates";
 import { Route as RootRoute } from "@/routes/__root";
@@ -21,17 +20,26 @@ function NewPour() {
   if (!user && !sessionUser) return <RedirectToSignIn />;
 
   async function onSubmit(draft: PourDraft) {
+    if (!user) throw new Error("请先登录");
     try {
-      const pour = await addPour({ data: draft });
-      await saveLocalPhoto(pour.id, draft.photo);
-      const stored = { ...pour, photo: draft.photo };
-      cachePour(stored);
-      if (user) void upsertCachedPour(user.id, stored);
-      notice("记下了。换手机登录同一个账号也能看见。");
+      const pour: Pour = {
+        id: newId(),
+        createdAt: draft.createdAt ?? new Date().toISOString(),
+        photo: draft.photo,
+        pattern: draft.pattern,
+        rating: draft.rating,
+        beans: draft.beans,
+        milk: draft.milk,
+        grind: draft.grind,
+        notes: draft.notes,
+      };
+      cachePour(pour);
+      await rememberPour(user.id, pour);
+      notice("记下了。这杯存在这台设备上，云端稍后备份。");
       void navigate({
         to: "/pour/$id",
         params: { id: pour.id },
-        state: { pour: stored } as never,
+        state: { pour } as never,
       });
     } catch (err) {
       notice(err instanceof Error ? err.message : "没保存上，再试一次。");

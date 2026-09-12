@@ -1,16 +1,21 @@
 const DB_NAME = "bloom-latte";
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const PHOTO_STORE = "photos";
 const JOURNAL_STORE = "journal";
+const PENDING_STORE = "pending";
 const JOURNAL_KEY = "snapshot";
-
-/** Skip a Neon/Vercel list pull when the local journal is newer than this. */
-export const JOURNAL_FRESH_MS = 20 * 60 * 1000;
+const PENDING_KEY = "queue";
 
 export type JournalSnapshotRow = {
   userId: string;
   fetchedAt: number;
+  restored: boolean;
   pours: import("@/lib/pours").Pour[];
+};
+
+export type PendingBackup = {
+  upserts: import("@/lib/pours").Pour[];
+  deletes: string[];
 };
 
 function openDb(): Promise<IDBDatabase> {
@@ -23,6 +28,9 @@ function openDb(): Promise<IDBDatabase> {
       }
       if (!db.objectStoreNames.contains(JOURNAL_STORE)) {
         db.createObjectStore(JOURNAL_STORE);
+      }
+      if (!db.objectStoreNames.contains(PENDING_STORE)) {
+        db.createObjectStore(PENDING_STORE);
       }
     };
     req.onsuccess = () => resolve(req.result);
@@ -125,17 +133,13 @@ export async function loadJournal(
   }
 }
 
-export function journalIsFresh(row: JournalSnapshotRow | null) {
-  if (!row) return false;
-  return Date.now() - row.fetchedAt < JOURNAL_FRESH_MS;
-}
-
 export async function saveJournal(
   userId: string,
   pours: import("@/lib/pours").Pour[],
-  fetchedAt = Date.now(),
+  extra: { fetchedAt?: number; restored?: boolean } = {},
 ) {
   if (!canIdb()) return;
+  const previous = await loadJournal(userId);
   const slim = pours.filter((p) => !p.demo).map(slimPour);
   for (const pour of pours) {
     if (pour.photo.startsWith("data:image/")) {
@@ -145,7 +149,8 @@ export async function saveJournal(
   const db = await openDb();
   const row: JournalSnapshotRow = {
     userId,
-    fetchedAt,
+    fetchedAt: extra.fetchedAt ?? Date.now(),
+    restored: extra.restored ?? previous?.restored ?? false,
     pours: slim,
   };
   await new Promise<void>((resolve, reject) => {
@@ -156,28 +161,99 @@ export async function saveJournal(
   });
 }
 
+export async function markJournalRestored(userId: string, pours: import("@/lib/pours").Pour[]) {
+  await saveJournal(userId, pours, { fetchedAt: Date.now(), restored: true });
+}
+
 export async function upsertCachedPour(
   userId: string,
   pour: import("@/lib/pours").Pour,
 ) {
-  const current = await loadJournal(userId);
   if (pour.photo.startsWith("data:image/")) {
     await saveLocalPhoto(pour.id, pour.photo);
   }
-  if (!current) return;
+  const current = await loadJournal(userId);
   const next = slimPour(pour);
-  const pours = [next, ...current.pours.filter((p) => p.id !== pour.id)];
+  const pours = [next, ...(current?.pours ?? []).filter((p) => p.id !== pour.id)];
   pours.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
-  await saveJournal(userId, pours, Date.now());
+  await saveJournal(userId, pours);
 }
 
 export async function removeCachedPour(userId: string, id: string) {
-  const current = await loadJournal(userId);
   await deleteLocalPhoto(id);
-  if (!current) return;
+  const current = await loadJournal(userId);
   await saveJournal(
     userId,
-    current.pours.filter((p) => p.id !== id),
-    Date.now(),
+    (current?.pours ?? []).filter((p) => p.id !== id),
   );
+}
+
+export async function loadPending(): Promise<PendingBackup> {
+  const empty: PendingBackup = { upserts: [], deletes: [] };
+  if (!canIdb()) return empty;
+  try {
+    const db = await openDb();
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction(PENDING_STORE, "readonly");
+      const req = tx.objectStore(PENDING_STORE).get(PENDING_KEY);
+      req.onsuccess = () => {
+        const value = req.result as PendingBackup | undefined;
+        resolve(
+          value && Array.isArray(value.upserts)
+            ? value
+            : empty,
+        );
+      };
+      req.onerror = () => reject(req.error);
+    });
+  } catch {
+    return empty;
+  }
+}
+
+export async function savePendingQueue(pending: PendingBackup) {
+  if (!canIdb()) return;
+  const db = await openDb();
+  await new Promise<void>((resolve, reject) => {
+    const tx = db.transaction(PENDING_STORE, "readwrite");
+    tx.objectStore(PENDING_STORE).put(pending, PENDING_KEY);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+export async function queueBackupUpsert(pour: import("@/lib/pours").Pour) {
+  const pending = await loadPending();
+  pending.deletes = pending.deletes.filter((id) => id !== pour.id);
+  pending.upserts = [
+    slimPour(pour),
+    ...pending.upserts.filter((p) => p.id !== pour.id),
+  ];
+  await savePendingQueue(pending);
+}
+
+export async function queueBackupDelete(id: string) {
+  const pending = await loadPending();
+  pending.upserts = pending.upserts.filter((p) => p.id !== id);
+  if (!pending.deletes.includes(id)) pending.deletes.push(id);
+  await savePendingQueue(pending);
+}
+
+export async function photoAsDataUrl(
+  id: string,
+  fallback = "",
+): Promise<string | null> {
+  if (fallback.startsWith("data:image/")) return fallback;
+  const local = await loadLocalPhoto(id);
+  if (typeof local === "string" && local.startsWith("data:image/")) return local;
+  if (local instanceof Blob) {
+    return await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () =>
+        resolve(typeof reader.result === "string" ? reader.result : null);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(local);
+    });
+  }
+  return null;
 }

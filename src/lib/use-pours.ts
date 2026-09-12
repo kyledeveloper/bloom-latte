@@ -1,13 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { cachePours, cachedOwnPours } from "@/lib/pour-cache";
-import {
-  journalIsFresh,
-  loadJournal,
-  saveJournal,
-} from "@/lib/photo-store";
+import { listenBackup, restoreIfNeeded } from "@/lib/local-backup";
 import { SEED_POURS } from "@/lib/seed";
-import { listPours } from "@/lib/pours-api";
 import type { Pour } from "@/lib/pours";
 
 export type JournalSnapshot = {
@@ -27,28 +22,21 @@ export function usePours(initial?: JournalSnapshot) {
     return rows;
   });
   const [fetched, setFetched] = useState(
-    () => (Boolean(initial) && !initial?.signedIn) || cachedOwnPours().length > 0,
+    () =>
+      (Boolean(initial) && !initial?.signedIn) || cachedOwnPours().length > 0,
   );
-  const syncing = useRef(false);
 
   const signedIn = isPending ? Boolean(initial?.signedIn) : Boolean(user);
   const ready = fetched && (!isPending || initial != null);
-
-  const pullCloud = useCallback(async (userId: string) => {
-    const rows = await listPours();
-    cachePours(rows);
-    await saveJournal(userId, rows);
-    return rows;
-  }, []);
 
   const reload = useCallback(async () => {
     if (!user) {
       setPours(SEED_POURS);
       return;
     }
-    const rows = await pullCloud(user.id);
+    const rows = await restoreIfNeeded(user.id);
     setPours(rows);
-  }, [user, pullCloud]);
+  }, [user]);
 
   useEffect(() => {
     if (isPending) return;
@@ -59,49 +47,17 @@ export function usePours(initial?: JournalSnapshot) {
       return;
     }
     const userId = user.id;
-    void (async () => {
-      const cached = await loadJournal(userId);
+    void restoreIfNeeded(userId).then((rows) => {
       if (cancelled) return;
-      if (cached?.pours.length) {
-        cachePours(cached.pours);
-        setPours(cached.pours);
-        setFetched(true);
-        if (journalIsFresh(cached)) return;
-      }
-      if (syncing.current) return;
-      syncing.current = true;
-      try {
-        const rows = await pullCloud(userId);
-        if (!cancelled) setPours(rows);
-      } catch {
-        if (!cancelled && !cached) setPours([]);
-      } finally {
-        syncing.current = false;
-        if (!cancelled) setFetched(true);
-      }
-    })();
+      setPours(rows);
+      setFetched(true);
+    });
     return () => {
       cancelled = true;
     };
-  }, [user, isPending, pullCloud]);
+  }, [user, isPending]);
 
-  useEffect(() => {
-    if (!user) return;
-    const userId = user.id;
-    const maybeRefresh = () => {
-      if (document.visibilityState !== "visible") return;
-      void loadJournal(userId).then((cached) => {
-        if (journalIsFresh(cached)) return;
-        return pullCloud(userId).then(setPours);
-      });
-    };
-    document.addEventListener("visibilitychange", maybeRefresh);
-    window.addEventListener("focus", maybeRefresh);
-    return () => {
-      document.removeEventListener("visibilitychange", maybeRefresh);
-      window.removeEventListener("focus", maybeRefresh);
-    };
-  }, [user, pullCloud]);
+  useEffect(() => listenBackup(), []);
 
   return {
     pours,

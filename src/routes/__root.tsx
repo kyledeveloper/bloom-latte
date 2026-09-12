@@ -26,6 +26,8 @@ export const Route = createRootRoute({
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: APP_NAME },
       { name: "theme-color", content: "#f3ece4" },
+      { name: "apple-mobile-web-app-title", content: "Bloom Latte" },
+      { name: "application-name", content: "Bloom Latte" },
       {
         name: "description",
         content: "杯中花 · 记录每一次拉花。照片、图案、豆子与评分，装进一本咖啡手记。",

@@ -152,13 +152,16 @@ export function stripInstallParams(url) {
 }
 
 export function renderInstallPageHtml(template, { host, url } = {}) {
+  const fromHost = appNameFromHost(host);
+  const name = fromHost === DEFAULT_APP_NAME ? "Bloom Latte" : fromHost;
   return String(template)
-    .replaceAll("{{APP_NAME}}", escapeHtml(appNameFromHost(host)))
+    .replaceAll("{{APP_NAME}}", escapeHtml(name))
     .replaceAll("{{APP_URL}}", escapeHtml(stripInstallParams(url)));
 }
 
 export function renderWebManifest(hostHeader) {
-  const name = appNameFromHost(hostHeader);
+  const fromHost = appNameFromHost(hostHeader);
+  const name = fromHost === DEFAULT_APP_NAME ? "Bloom Latte" : fromHost;
   return JSON.stringify(
     {
       name,

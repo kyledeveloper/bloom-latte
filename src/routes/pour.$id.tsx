@@ -198,7 +198,7 @@ function PourDetail() {
       {editing && canEdit ? (
         <PourForm initial={pour} submitLabel="保存修改" onSubmit={onSave} />
       ) : (
-        <article className="grid gap-6 md:grid-cols-2 md:items-start md:gap-8">
+        <article className="page-enter grid gap-6 md:grid-cols-2 md:items-start md:gap-8">
           <div className="overflow-hidden rounded-2xl bg-cream p-2 shadow-[var(--shadow-border)]">
             <PourPhoto
               src={pour.photo}

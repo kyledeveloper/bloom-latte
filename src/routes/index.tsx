@@ -116,7 +116,7 @@ function Home() {
             ))}
           </div>
         ) : showExamples ? (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <div className="stagger-in grid grid-cols-2 gap-3 sm:grid-cols-3">
             {SEED_POURS.map((pour, i) => (
               <PourCard key={pour.id} pour={pour} priority={i < 4} />
             ))}
@@ -124,7 +124,10 @@ function Home() {
         ) : visible.length === 0 ? (
           <EmptyState filtered={filter !== "all"} signedIn={signedIn} />
         ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <div
+            key={filter}
+            className="stagger-in grid grid-cols-2 gap-3 sm:grid-cols-3"
+          >
             {visible.map((pour, i) => (
               <PourCard key={pour.id} pour={pour} priority={i < 4} />
             ))}
@@ -142,7 +145,7 @@ function Home() {
                   <span className="w-16 shrink-0 text-muted">{p.name}</span>
                   <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-cream">
                     <span
-                      className="block h-full rounded-full bg-primary"
+                      className="bar-fill block h-full rounded-full bg-primary"
                       style={{
                         width: `${Math.max(8, (p.n / ownPours.length) * 100)}%`,
                       }}
@@ -160,7 +163,7 @@ function Home() {
 
       <Link
         to="/new"
-        className="fixed z-20 flex h-12 items-center gap-2 rounded-full bg-primary px-4 text-sm font-medium text-primary-fg shadow-[var(--shadow-border)] transition-transform duration-150 active:scale-[0.96] sm:hidden right-[max(1.25rem,env(safe-area-inset-right))] bottom-[max(1.25rem,env(safe-area-inset-bottom))]"
+        className="fab-in fixed z-20 flex h-12 items-center gap-2 rounded-full bg-primary px-4 text-sm font-medium text-primary-fg shadow-[var(--shadow-border)] transition-transform duration-150 hover:-translate-y-0.5 active:scale-[0.96] sm:hidden right-[max(1.25rem,env(safe-area-inset-right))] bottom-[max(1.25rem,env(safe-area-inset-bottom))]"
       >
         <Camera className="size-5" />
         拍下这杯

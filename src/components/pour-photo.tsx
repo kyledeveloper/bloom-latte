@@ -102,7 +102,10 @@ export function PourPhoto({
       decoding={priority ? "sync" : "async"}
       fetchPriority={priority ? "high" : "auto"}
       onError={() => setFailed(true)}
-      className={cn("pour-photo aspect-square w-full object-cover", className)}
+      className={cn(
+        "pour-photo photo-in aspect-square w-full object-cover",
+        className,
+      )}
     />
   );
 }

@@ -1,6 +1,10 @@
 export function Wordmark({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 32 32" className={className ?? "size-8"} aria-hidden>
+    <svg
+      viewBox="0 0 32 32"
+      className={`wordmark-bloom ${className ?? "size-8"}`}
+      aria-hidden
+    >
       <rect width="32" height="32" rx="9" className="fill-primary" />
       <circle cx="16" cy="15" r="8" className="fill-bg" />
       <path

@@ -52,7 +52,7 @@ export function PhotoField({
             <img
               src={value}
               alt="这杯拉花"
-              className="pour-photo size-full object-cover"
+              className="pour-photo photo-in size-full object-cover"
             />
           </button>
         ) : (

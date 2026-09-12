@@ -31,7 +31,7 @@ export function AppShell({
     >
       <header
         className={cn(
-          "mb-6 flex items-center gap-3",
+          "page-enter mb-6 flex items-center gap-3",
           editorial ? "items-center justify-between sm:items-end" : "min-h-11",
         )}
       >
@@ -67,7 +67,7 @@ export function AppShell({
         )}
         {action ? <div className="shrink-0">{action}</div> : null}
       </header>
-      {children}
+      <div className="page-enter [animation-delay:60ms]">{children}</div>
     </div>
   );
 }

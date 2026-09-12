@@ -25,10 +25,10 @@ export function PatternPicker({
             aria-checked={selected}
             onClick={() => onChange(p.id)}
             className={cn(
-              "flex min-h-20 flex-col items-center gap-1.5 rounded-lg px-1 py-2.5 text-center transition-[background-color,color,box-shadow] duration-150",
+              "flex min-h-20 flex-col items-center gap-1.5 rounded-lg px-1 py-2.5 text-center transition-[background-color,color,box-shadow,transform] duration-200 ease-out",
               selected
-                ? "bg-primary text-primary-fg shadow-[var(--shadow-border)]"
-                : "bg-surface text-fg shadow-[var(--shadow-border)] hover:bg-cream",
+                ? "bg-primary text-primary-fg shadow-[var(--shadow-border)] scale-[1.02]"
+                : "bg-surface text-fg shadow-[var(--shadow-border)] hover:bg-cream active:scale-[0.97]",
             )}
           >
             <PatternMark id={p.id} className="size-5" />
@@ -64,10 +64,10 @@ export function PatternFilter({
             type="button"
             onClick={() => onChange(chip.id)}
             className={cn(
-              "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-sm font-medium transition-colors duration-150",
+              "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-sm font-medium transition-[background-color,color,transform] duration-200 ease-out",
               selected
-                ? "bg-primary text-primary-fg"
-                : "bg-surface text-muted shadow-[var(--shadow-border)] hover:text-fg",
+                ? "bg-primary text-primary-fg scale-[1.03]"
+                : "bg-surface text-muted shadow-[var(--shadow-border)] hover:text-fg active:scale-[0.97]",
             )}
           >
             {chip.name}

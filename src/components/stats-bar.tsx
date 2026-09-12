@@ -13,7 +13,7 @@ export function StatsBar({ pours }: { pours: Pour[] }) {
     { label: "连续", value: streak ? `${streak} 日` : "—" },
   ];
   return (
-    <dl className="grid grid-cols-3 divide-x divide-border rounded-xl bg-surface shadow-[var(--shadow-border)]">
+    <dl className="stagger-in grid grid-cols-3 divide-x divide-border rounded-xl bg-surface shadow-[var(--shadow-border)]">
       {items.map((item) => (
         <div key={item.label} className="flex flex-col items-center gap-0.5 py-3">
           <dd className="font-display text-xl font-medium tabular-nums tracking-tight">

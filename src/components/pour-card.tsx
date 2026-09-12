@@ -20,7 +20,7 @@ export function PourCard({
       state={{ pour } as never}
       onClick={() => cachePour(pour)}
       onPointerDown={() => cachePour(pour)}
-      className="group block rounded-xl bg-surface p-2 shadow-[var(--shadow-border)] transition-[transform,box-shadow] duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.98]"
+      className="group block rounded-xl bg-surface p-2 shadow-[var(--shadow-border)] transition-[transform,box-shadow] duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_28px_-16px_color-mix(in_oklab,var(--color-fg)_28%,transparent)] active:scale-[0.98]"
     >
       <div className="relative overflow-hidden rounded-lg bg-cream">
         <PourPhoto

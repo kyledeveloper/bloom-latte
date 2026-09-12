@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link2, Share2 } from "lucide-react";
 import { notice } from "@/lib/notice";
 import {
@@ -8,11 +8,9 @@ import {
   renderPourShareCard,
   shareFilename,
 } from "@/lib/share-card";
+import { getWebsiteShareUrl } from "@/lib/qr-code";
 import { type Pour } from "@/lib/pours";
 import { patternLabel, useLocale, useT } from "@/lib/i18n";
-import { usePours } from "@/lib/use-pours";
-import { useCurrentUserState } from "@/lib/auth/use-current-user";
-import { buildPourSharePayload, encodeShareUrl } from "@/lib/share-payload";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,7 +19,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { photoAsDataUrl } from "@/lib/photo-store";
 import { cn } from "@/lib/utils";
 
 export function SharePourButton({
@@ -39,20 +36,8 @@ export function SharePourButton({
   const [blob, setBlob] = useState<Blob | null>(null);
   const t = useT();
   const locale = useLocale();
-  const { pours } = usePours();
-  const { user } = useCurrentUserState();
-
-  const userName =
-    user?.displayName || user?.primaryEmail?.split("@")[0] || "";
-  const sharePayload = useMemo(
-    () => buildPourSharePayload(pour, pours, userName),
-    [pour, pours, userName],
-  );
-  const shareUrl = useMemo(
-    () => encodeShareUrl(sharePayload),
-    [sharePayload],
-  );
   const title = `${t("bloom")} · ${patternLabel(pour.pattern, locale)}`;
+  const shareUrl = getWebsiteShareUrl();
 
   useEffect(() => {
     return () => {
@@ -62,40 +47,10 @@ export function SharePourButton({
 
   async function openShare() {
     setOpen(true);
-
-    // Non-blocking upload to server so remote visitors can view the photo
-    void (async () => {
-      try {
-        let photoData = pour.photo;
-        if (!photoData || !photoData.startsWith("data:image/")) {
-          const local = await photoAsDataUrl(pour.id, pour.photo);
-          if (local) photoData = local;
-        }
-        if (photoData && photoData.startsWith("data:image/")) {
-          await fetch(`/api/pours/${pour.id}/photo`, {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({
-              photo: photoData,
-              pattern: pour.pattern,
-              rating: pour.rating,
-              beans: pour.beans,
-              milk: pour.milk,
-              grind: pour.grind,
-              notes: pour.notes,
-              createdAt: pour.createdAt,
-            }),
-          });
-        }
-      } catch {
-        // Non-blocking
-      }
-    })();
-
     if (blob && preview) return;
     setBusy(true);
     try {
-      const next = await renderPourShareCard(pour, { shareUrl });
+      const next = await renderPourShareCard(pour);
       setBlob(next);
       setPreview(URL.createObjectURL(next));
     } catch {
@@ -123,8 +78,24 @@ export function SharePourButton({
     }
   }
 
-  function saveImage() {
+  async function saveImage() {
     if (!blob) return;
+    if (canNativeShare()) {
+      try {
+        const result = await nativeShareImage(
+          blob,
+          shareFilename(pour),
+          title,
+          shareUrl,
+        );
+        if (result === "shared") {
+          notice(t("shareSavedSend"));
+          return;
+        }
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+      }
+    }
     downloadBlob(blob, shareFilename(pour));
     notice(t("shareDownloaded"));
   }
@@ -202,12 +173,17 @@ export function SharePourButton({
               <img
                 src={preview}
                 alt={title}
-                className="max-h-[46vh] sm:max-h-[350px] w-auto max-w-full rounded-lg object-contain shadow-xs"
+                className="max-h-[46vh] sm:max-h-[350px] w-auto max-w-full rounded-lg object-contain shadow-xs select-auto"
               />
             ) : (
               <div className="aspect-[3/4] h-56 w-full" />
             )}
           </div>
+          <p className="text-center text-[11px] text-muted -mt-1">
+            {locale === "en"
+              ? "Tip: Long-press image to save directly to Photos"
+              : "长按上方图片可直接「存储到系统相册」"}
+          </p>
 
           {shareUrl ? (
             <div className="flex shrink-0 items-center justify-between gap-2 rounded-lg border border-border/70 bg-surface px-3 py-2 text-xs">

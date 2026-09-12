@@ -174,10 +174,7 @@ async function waitForFonts() {
   }
 }
 
-export async function renderPourShareCard(
-  pour: Pour,
-  options?: { shareUrl?: string },
-): Promise<Blob> {
+export async function renderPourShareCard(pour: Pour): Promise<Blob> {
   await waitForFonts();
   const locale = getLocale();
   const photo = await loadPhoto(pour.photo, pour.demo ? undefined : pour.id, locale);
@@ -250,8 +247,7 @@ export async function renderPourShareCard(
   }
 
   // Draw QR code badge in the bottom right corner
-  const websiteUrl =
-    options?.shareUrl || getWebsiteShareUrl() || "https://bloom-latte.vercel.app";
+  const websiteUrl = getWebsiteShareUrl() || "https://bloom-latte.vercel.app";
   const qrMatrix = createQrMatrix(websiteUrl, "M");
   const qrSize = 136;
   const qrX = W - pad - qrSize;

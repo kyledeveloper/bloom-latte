@@ -189,15 +189,6 @@ const zh = {
   done: "完成",
   save: "保存",
   cancel: "取消",
-  friendPracticeTitle: "{name}在第 {day} 天的练习",
-  anonymousFriend: "好友",
-  streakDaysCount: "连续打卡 {n} 天",
-  cupCountBadge: "第 {n} 杯",
-  joinAndRecordCTA: "我也来记录第一杯",
-  joinAndRecordSub: "无需注册 · 随手拍下你的杯中花",
-  sharedFromFriend: "来自好友的拉花手记",
-  browseJournal: "去手记首页逛逛 →",
-  closeSharedBanner: "收起",
 } as const;
 
 const en: Record<keyof typeof zh, string> = {
@@ -340,15 +331,6 @@ const en: Record<keyof typeof zh, string> = {
   done: "Done",
   save: "Save",
   cancel: "Cancel",
-  friendPracticeTitle: "{name}'s Day {day} Practice",
-  anonymousFriend: "A coffee friend",
-  streakDaysCount: "Streak: {n} days",
-  cupCountBadge: "Cup #{n}",
-  joinAndRecordCTA: "Log my first cup too",
-  joinAndRecordSub: "No sign up needed · Log your latte art",
-  sharedFromFriend: "Shared from a latte friend",
-  browseJournal: "Explore latte journal →",
-  closeSharedBanner: "Dismiss",
 };
 
 export const messages = { zh, en };

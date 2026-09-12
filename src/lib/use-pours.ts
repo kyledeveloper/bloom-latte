@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { cachePours, cachedOwnPours } from "@/lib/pour-cache";
-import { listenBackup, restoreIfNeeded } from "@/lib/local-backup";
+import { restoreIfNeeded } from "@/lib/local-backup";
 import { SEED_POURS } from "@/lib/seed";
 import type { Pour } from "@/lib/pours";
 
@@ -56,8 +56,6 @@ export function usePours(initial?: JournalSnapshot) {
       cancelled = true;
     };
   }, [user, isPending]);
-
-  useEffect(() => listenBackup(), []);
 
   return {
     pours,

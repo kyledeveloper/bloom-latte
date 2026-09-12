@@ -142,7 +142,7 @@ function PourDetail() {
     await rememberPour(user.id, next);
     setPour(next);
     setEditing(false);
-    notice("已更新。这台设备已保存，云端稍后备份。");
+    notice("已更新。改动只在这台设备上。");
   }
 
   async function onDelete() {

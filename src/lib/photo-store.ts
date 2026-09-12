@@ -10,6 +10,7 @@ export type JournalSnapshotRow = {
   userId: string;
   fetchedAt: number;
   restored: boolean;
+  lastBackupAt: number | null;
   pours: import("@/lib/pours").Pour[];
 };
 
@@ -136,7 +137,7 @@ export async function loadJournal(
 export async function saveJournal(
   userId: string,
   pours: import("@/lib/pours").Pour[],
-  extra: { fetchedAt?: number; restored?: boolean } = {},
+  extra: { fetchedAt?: number; restored?: boolean; lastBackupAt?: number | null } = {},
 ) {
   if (!canIdb()) return;
   const previous = await loadJournal(userId);
@@ -151,6 +152,10 @@ export async function saveJournal(
     userId,
     fetchedAt: extra.fetchedAt ?? Date.now(),
     restored: extra.restored ?? previous?.restored ?? false,
+    lastBackupAt:
+      extra.lastBackupAt !== undefined
+        ? extra.lastBackupAt
+        : previous?.lastBackupAt ?? null,
     pours: slim,
   };
   await new Promise<void>((resolve, reject) => {

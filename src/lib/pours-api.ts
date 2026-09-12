@@ -114,6 +114,16 @@ export const upsertPour = createServerFn({ method: "POST" })
     `;
   });
 
+export const listPourIds = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    const sql = await getSql();
+    const rows = await sql<{ id: string }>`
+      select id from pours where user_id = ${context.userId}
+    `;
+    return rows.map((row) => row.id);
+  });
+
 export const deletePour = createServerFn({ method: "POST" })
   .validator((id: string) => id)
   .middleware([authMiddleware])

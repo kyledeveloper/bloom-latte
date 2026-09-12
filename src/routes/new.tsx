@@ -35,7 +35,7 @@ function NewPour() {
       };
       cachePour(pour);
       await rememberPour(user.id, pour);
-      notice("记下了。这杯存在这台设备上，云端稍后备份。");
+      notice("记下了。这杯只在这台设备上，需要时再备份到云端。");
       void navigate({
         to: "/pour/$id",
         params: { id: pour.id },

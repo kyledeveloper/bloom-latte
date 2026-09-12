@@ -2,6 +2,8 @@ import { pourStreak, type PatternId, type Pour } from "./pours.ts";
 import { getWebsiteShareUrl } from "./qr-code.ts";
 
 export interface SharedPourData {
+  id?: string;
+  photo?: string;
   userName: string;
   dayNumber: number;
   cupNumber?: number;
@@ -63,6 +65,8 @@ export function buildPourSharePayload(
   );
 
   return {
+    id: pour.id,
+    photo: pour.photo && !pour.photo.startsWith("data:") ? pour.photo : undefined,
     userName: userName?.trim() || "",
     dayNumber,
     cupNumber,
@@ -87,6 +91,8 @@ export function encodeShareUrl(
   );
 
   const params = new URLSearchParams();
+  if (data.id) params.set("id", data.id);
+  if (data.photo && !data.photo.startsWith("data:")) params.set("ph", data.photo);
   if (data.userName) params.set("u", data.userName);
   params.set("d", String(data.dayNumber));
   if (data.cupNumber) params.set("c", String(data.cupNumber));
@@ -115,9 +121,11 @@ export function decodeSharePayload(
   const pattern = searchParams.get("p") as PatternId | null;
   const ratingStr = searchParams.get("r");
   const dayStr = searchParams.get("d");
+  const id = searchParams.get("id") || undefined;
+  const photo = searchParams.get("ph") || undefined;
 
-  // A valid shared payload must at least specify a pattern or a day count
-  if (!pattern && !dayStr) {
+  // A valid shared payload must at least specify a pattern or a day count or an id
+  if (!pattern && !dayStr && !id) {
     return null;
   }
 
@@ -127,6 +135,8 @@ export function decodeSharePayload(
   const streakStr = searchParams.get("s");
 
   return {
+    id,
+    photo,
     userName: searchParams.get("u") || "",
     dayNumber: Number.isNaN(dayNumber) ? 1 : Math.max(1, dayNumber),
     cupNumber: cupStr ? Number.parseInt(cupStr, 10) : undefined,

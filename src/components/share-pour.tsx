@@ -21,6 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { photoAsDataUrl } from "@/lib/photo-store";
 import { cn } from "@/lib/utils";
 
 export function SharePourButton({
@@ -61,6 +62,36 @@ export function SharePourButton({
 
   async function openShare() {
     setOpen(true);
+
+    // Non-blocking upload to server so remote visitors can view the photo
+    void (async () => {
+      try {
+        let photoData = pour.photo;
+        if (!photoData || !photoData.startsWith("data:image/")) {
+          const local = await photoAsDataUrl(pour.id, pour.photo);
+          if (local) photoData = local;
+        }
+        if (photoData && photoData.startsWith("data:image/")) {
+          await fetch(`/api/pours/${pour.id}/photo`, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+              photo: photoData,
+              pattern: pour.pattern,
+              rating: pour.rating,
+              beans: pour.beans,
+              milk: pour.milk,
+              grind: pour.grind,
+              notes: pour.notes,
+              createdAt: pour.createdAt,
+            }),
+          });
+        }
+      } catch {
+        // Non-blocking
+      }
+    })();
+
     if (blob && preview) return;
     setBusy(true);
     try {

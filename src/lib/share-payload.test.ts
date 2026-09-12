@@ -56,18 +56,21 @@ test("calculatePracticeMetrics computes days, cups and streak accurately", () =>
 
 test("encodeShareUrl and decodeSharePayload roundtrip cleanly", () => {
   const payload = buildPourSharePayload(mockPours[2]!, mockPours, "Kyle");
+  assert.equal(payload.id, "p3");
   assert.equal(payload.userName, "Kyle");
   assert.equal(payload.pattern, "swan");
   assert.equal(payload.rating, 5);
 
   const url = encodeShareUrl(payload, "https://bloom-latte.vercel.app");
   assert.ok(url.startsWith("https://bloom-latte.vercel.app/?"));
+  assert.ok(url.includes("id=p3"));
   assert.ok(url.includes("u=Kyle"));
   assert.ok(url.includes("p=swan"));
   assert.ok(url.includes("r=5"));
 
   const decoded = decodeSharePayload(url);
   assert.ok(decoded);
+  assert.equal(decoded.id, "p3");
   assert.equal(decoded.userName, "Kyle");
   assert.equal(decoded.pattern, "swan");
   assert.equal(decoded.rating, 5);

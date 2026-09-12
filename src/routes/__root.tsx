@@ -8,7 +8,7 @@ import { useEffect } from "react";
 import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import { NoticeHost } from "@/components/notice-host";
-import { getLocale, useLocale } from "@/lib/i18n";
+import { getLocale, translate, useLocale } from "@/lib/i18n";
 import appCss from "../styles.css?url";
 
 const APP_NAME = "杯中花";
@@ -18,7 +18,7 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { title: APP_NAME },
+      { title: getLocale() === "en" ? "Bloom Latte" : APP_NAME },
       { name: "theme-color", content: "#f3ece4" },
       { name: "apple-mobile-web-app-title", content: "Bloom Latte" },
       { name: "application-name", content: "Bloom Latte" },
@@ -51,6 +51,7 @@ function LangSync() {
   const locale = useLocale();
   useEffect(() => {
     document.documentElement.lang = locale === "zh" ? "zh-CN" : "en";
+    document.title = translate(locale, "bloom");
   }, [locale]);
   return null;
 }

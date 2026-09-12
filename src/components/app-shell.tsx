@@ -42,7 +42,7 @@ export function AppShell({
             <Wordmark className="size-10 shrink-0" />
             <span className="flex min-w-0 flex-col">
               <span className="font-display text-2xl font-medium tracking-tight">
-                杯中花
+                {t("bloom")}
               </span>
               <span className="hidden text-xs tracking-[0.18em] text-muted uppercase sm:inline">
                 {t("bloomSub")}

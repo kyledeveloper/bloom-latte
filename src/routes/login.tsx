@@ -55,7 +55,7 @@ function Login() {
         const { error } = await authClient.signUp.email({
           email,
           password,
-          name: email.split("@")[0] || "杯中花",
+          name: email.split("@")[0] || t("bloom"),
         });
         if (error) throw new Error(error.message ?? t("registerFail"));
       } else {
@@ -87,7 +87,7 @@ function Login() {
         <Link to="/" className="flex flex-col items-center gap-3">
           <Wordmark className="size-14" />
           <span className="font-display text-3xl font-medium tracking-tight">
-            杯中花
+            {t("bloom")}
           </span>
         </Link>
         <p className="text-muted">{t("loginLead")}</p>

@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useT } from "@/lib/i18n";
+import { setNoticeHandler, type Notice } from "@/lib/notice";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,21 +11,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-type Notice = { title?: string; message: string };
-
-let pushNotice: ((notice: Notice) => void) | null = null;
-
-export function notice(message: string, title = "提示") {
-  pushNotice?.({ title, message });
-}
-
 export function NoticeHost() {
   const [current, setCurrent] = useState<Notice | null>(null);
+  const t = useT();
 
   useEffect(() => {
-    pushNotice = (next) => setCurrent(next);
+    setNoticeHandler((next) => setCurrent(next));
     return () => {
-      pushNotice = null;
+      setNoticeHandler(null);
     };
   }, []);
 
@@ -36,14 +31,14 @@ export function NoticeHost() {
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{current?.title ?? "提示"}</DialogTitle>
+          <DialogTitle>{current?.title || t("notice")}</DialogTitle>
           <DialogDescription className="text-base text-fg">
             {current?.message}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button size="pill" onClick={() => setCurrent(null)}>
-            好的
+            {t("ok")}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -30,8 +30,9 @@ function Home() {
   const t = useT();
   const locale = useLocale();
   const [filter, setFilter] = useState<PatternId | "all">("all");
-  const ownPours = signedIn ? pours : SEED_POURS;
-  const gallery = signedIn ? pours : SEED_POURS;
+  const hasOwnPours = pours.length > 0;
+  const ownPours = hasOwnPours ? pours : SEED_POURS;
+  const gallery = hasOwnPours ? pours : SEED_POURS;
 
   const counts = useMemo(() => {
     const next: Partial<Record<PatternId | "all", number>> = {
@@ -86,7 +87,7 @@ function Home() {
 
         {ready && !signedIn ? (
           <div className="flex flex-col gap-2 rounded-lg bg-cream/80 px-3 py-2.5 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
-            <p>{t("examplesHint")}</p>
+            <p>{hasOwnPours ? t("guestBackupHint") : t("guestWelcomeHint")}</p>
             <Link
               to="/login"
               className="shrink-0 font-medium text-fg underline-offset-4 hover:underline"

@@ -78,7 +78,9 @@ export const upsertPour = createServerFn({ method: "POST" })
   .validator((input: PourDraft & { id: string }) => {
     if (!input.id) throw new Error("找不到这杯");
     const cleaned = cleanDraft(input);
-    if (!cleaned.photo.startsWith("data:image/")) {
+    const keepRemote =
+      cleaned.photo.startsWith("/api/pours/") || cleaned.photo.startsWith("/pours/");
+    if (!cleaned.photo.startsWith("data:image/") && !keepRemote) {
       throw new Error("备份需要照片");
     }
     return { id: input.id, ...cleaned };
@@ -103,7 +105,7 @@ export const upsertPour = createServerFn({ method: "POST" })
       )
       on conflict (id) do update set
         created_at = excluded.created_at,
-        photo = excluded.photo,
+        photo = case when excluded.photo like 'data:image/%' then excluded.photo else pours.photo end,
         pattern = excluded.pattern,
         rating = excluded.rating,
         beans = excluded.beans,

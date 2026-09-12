@@ -4,7 +4,7 @@ import {
 } from "@/lib/pours";
 import { getBearerToken } from "@/lib/auth/client";
 import { loadLocalPhoto } from "@/lib/photo-store";
-import { getLocale, patternLabel, translate } from "@/lib/i18n";
+import { getLocale, milkLabel, patternLabel, translate } from "@/lib/i18n";
 
 const W = 1080;
 const H = 1440;
@@ -33,7 +33,11 @@ function roundRect(
   ctx.closePath();
 }
 
-function loadPhoto(src: string, pourId?: string): Promise<HTMLImageElement> {
+function loadPhoto(
+  src: string,
+  pourId?: string,
+  locale = getLocale(),
+): Promise<HTMLImageElement> {
   return (async () => {
     let url = src;
     if (pourId) {
@@ -47,14 +51,14 @@ function loadPhoto(src: string, pourId?: string): Promise<HTMLImageElement> {
       if (token) headers.set("Authorization", `Bearer ${token}`);
       const href = token ? `${url}${url.includes("?") ? "&" : "?"}bt=${encodeURIComponent(token)}` : url;
       const res = await fetch(href, { headers, credentials: "include" });
-      if (!res.ok) throw new Error("照片加载失败");
+      if (!res.ok) throw new Error(translate(locale, "photoLoadFailed"));
       url = URL.createObjectURL(await res.blob());
     }
     return new Promise<HTMLImageElement>((resolve, reject) => {
       const img = new Image();
       if (!url.startsWith("data:")) img.crossOrigin = "anonymous";
       img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error("照片加载失败"));
+      img.onerror = () => reject(new Error(translate(locale, "photoLoadFailed")));
       img.src = url;
     });
   })();
@@ -168,12 +172,12 @@ async function waitForFonts() {
 export async function renderPourShareCard(pour: Pour): Promise<Blob> {
   await waitForFonts();
   const locale = getLocale();
-  const photo = await loadPhoto(pour.photo, pour.demo ? undefined : pour.id);
+  const photo = await loadPhoto(pour.photo, pour.demo ? undefined : pour.id, locale);
   const canvas = document.createElement("canvas");
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("无法生成图片");
+  if (!ctx) throw new Error(translate(locale, "cannotGenerateImage"));
 
   ctx.fillStyle = PAPER;
   ctx.fillRect(0, 0, W, H);
@@ -213,7 +217,13 @@ export async function renderPourShareCard(pour: Pour): Promise<Blob> {
   ctx.font = '500 30px "Noto Sans SC", sans-serif';
   ctx.fillText(formatPourDate(pour.createdAt, locale), pad, y);
 
-  const meta = [pour.beans, pour.grind, pour.milk].filter(Boolean).join("  ·  ");
+  const meta = [
+    pour.beans,
+    pour.grind,
+    pour.milk ? milkLabel(pour.milk, locale) : "",
+  ]
+    .filter(Boolean)
+    .join("  ·  ");
   if (meta) {
     y += 44;
     ctx.fillText(meta, pad, y);
@@ -241,7 +251,7 @@ export async function renderPourShareCard(pour: Pour): Promise<Blob> {
 
   return new Promise((resolve, reject) => {
     canvas.toBlob(
-      (blob) => (blob ? resolve(blob) : reject(new Error("无法导出图片"))),
+      (blob) => (blob ? resolve(blob) : reject(new Error(translate(locale, "cannotExportImage")))),
       "image/jpeg",
       0.92,
     );

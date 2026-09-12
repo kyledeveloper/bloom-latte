@@ -8,7 +8,8 @@ import {
 import { emailAndPasswordEnabled } from "@/lib/auth/email-password";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { useT } from "@/lib/i18n";
-import { notice } from "@/components/notice-host";
+import { notice } from "@/lib/notice";
+import { LocaleToggle } from "@/components/auth-slot";
 import { Wordmark } from "@/components/wordmark";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,7 +61,7 @@ function Login() {
         if (error) throw new Error(error.message ?? t("registerFail"));
       } else {
         const { error } = await authClient.signIn.email({ email, password });
-        if (error) throw new Error(error.message ?? "登录失败");
+        if (error) throw new Error(error.message ?? t("loginFail"));
       }
       window.location.href = "/";
     } catch (err) {
@@ -82,7 +83,10 @@ function Login() {
   }
 
   return (
-    <main className="grid min-h-dvh place-items-center bg-bg px-6">
+    <main className="relative grid min-h-dvh place-items-center bg-bg px-6">
+      <div className="absolute top-[max(1rem,env(safe-area-inset-top))] right-[max(1.25rem,env(safe-area-inset-right))]">
+        <LocaleToggle />
+      </div>
       <div className="page-enter flex w-full max-w-sm flex-col items-center gap-6 text-center">
         <Link to="/" className="flex flex-col items-center gap-3">
           <Wordmark className="size-14" />

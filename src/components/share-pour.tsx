@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Share2 } from "lucide-react";
-import { notice } from "@/components/notice-host";
+import { notice } from "@/lib/notice";
 import {
   canNativeShare,
   downloadBlob,

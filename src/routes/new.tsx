@@ -1,11 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { notice } from "@/components/notice-host";
+import { notice } from "@/lib/notice";
 import { newId, type Pour, type PourDraft } from "@/lib/pours";
 import { cachePour } from "@/lib/pour-cache";
-import { rememberPour } from "@/lib/local-backup";
+import { GUEST_USER_ID, rememberPour } from "@/lib/local-backup";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { useT } from "@/lib/i18n";
-import { RedirectToSignIn } from "@/lib/auth/gates";
 import { AppShell } from "@/components/app-shell";
 import { AuthSlot } from "@/components/auth-slot";
 import { PourForm } from "@/components/pour-form";
@@ -28,10 +27,8 @@ function NewPour() {
     );
   }
 
-  if (!user) return <RedirectToSignIn />;
-
   async function onSubmit(draft: PourDraft) {
-    if (!user) throw new Error(t("pleaseSignIn"));
+    const activeId = user?.id ?? GUEST_USER_ID;
     try {
       const pour: Pour = {
         id: newId(),
@@ -45,8 +42,8 @@ function NewPour() {
         notes: draft.notes,
       };
       cachePour(pour);
-      await rememberPour(user.id, pour);
-      notice(t("savedLocal"));
+      await rememberPour(activeId, pour);
+      notice(user ? t("savedLocal") : t("savedLocalGuest"));
       void navigate({
         to: "/pour/$id",
         params: { id: pour.id },

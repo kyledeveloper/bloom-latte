@@ -158,6 +158,14 @@ const zh = {
   saveImage: "保存图片",
   sendToFriends: "发给朋友",
   downloadShare: "下载分享",
+  savedLocalGuest: "记下了。这杯只在这台设备上，登录后可备份到云端。",
+  guestBackupHint: "已保存在这台设备上。登录后可备份到云端。",
+  guestWelcomeHint: "现在看到的是示例。点击「记录」记下第一杯，无需注册。",
+  notice: "提示",
+  ok: "好的",
+  photoLoadFailed: "照片加载失败",
+  cannotGenerateImage: "无法生成图片",
+  cannotExportImage: "无法导出图片",
 } as const;
 
 const en: Record<keyof typeof zh, string> = {
@@ -269,6 +277,14 @@ const en: Record<keyof typeof zh, string> = {
   saveImage: "Save image",
   sendToFriends: "Send",
   downloadShare: "Download",
+  savedLocalGuest: "Saved on this device. Sign in anytime to back up to the cloud.",
+  guestBackupHint: "Saved on this device. Sign in to back up to the cloud.",
+  guestWelcomeHint: "These are sample pours. Tap Log to start, no sign up needed.",
+  notice: "Notice",
+  ok: "OK",
+  photoLoadFailed: "Failed to load photo",
+  cannotGenerateImage: "Failed to generate image",
+  cannotExportImage: "Failed to export image",
 };
 
 export const messages = { zh, en };

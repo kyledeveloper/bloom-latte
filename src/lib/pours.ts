@@ -63,7 +63,12 @@ export function newId() {
 }
 
 export async function compressImage(file: File): Promise<string> {
-  const bitmap = await createImageBitmap(file);
+  let bitmap: ImageBitmap;
+  try {
+    bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+  } catch {
+    bitmap = await createImageBitmap(file);
+  }
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) {
@@ -120,31 +125,27 @@ export function sameDay(a: string, b: string) {
   );
 }
 
+function toStreakDateKey(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
 export function pourStreak(pours: Pour[], now = new Date()) {
   const days = new Set(
-    pours.map((p) => {
-      const d = new Date(p.createdAt);
-      return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-    }),
+    pours.map((p) => toStreakDateKey(new Date(p.createdAt))),
   );
   let streak = 0;
   const cursor = new Date(now);
   cursor.setHours(0, 0, 0, 0);
-  while (
-    days.has(
-      `${cursor.getFullYear()}-${cursor.getMonth()}-${cursor.getDate()}`,
-    )
-  ) {
+  while (days.has(toStreakDateKey(cursor))) {
     streak += 1;
     cursor.setDate(cursor.getDate() - 1);
   }
   if (streak === 0) {
     cursor.setDate(cursor.getDate() - 1);
-    while (
-      days.has(
-        `${cursor.getFullYear()}-${cursor.getMonth()}-${cursor.getDate()}`,
-      )
-    ) {
+    while (days.has(toStreakDateKey(cursor))) {
       streak += 1;
       cursor.setDate(cursor.getDate() - 1);
     }

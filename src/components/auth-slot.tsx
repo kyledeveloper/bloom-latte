@@ -4,8 +4,25 @@ import { signOut } from "@/lib/auth/client";
 import { readAuthHint, useCurrentUserState } from "@/lib/auth/use-current-user";
 import { setLocale, useLocale, useT } from "@/lib/i18n";
 import { coldBackup } from "@/lib/local-backup";
-import { notice } from "@/components/notice-host";
+import { notice } from "@/lib/notice";
 import { Button } from "@/components/ui/button";
+
+export function LocaleToggle({ className }: { className?: string }) {
+  const locale = useLocale();
+  return (
+    <button
+      type="button"
+      onClick={() => setLocale(locale === "zh" ? "en" : "zh")}
+      className={
+        className ??
+        "h-9 rounded-full bg-surface px-3 text-xs font-medium text-muted shadow-[var(--shadow-border)] transition-colors hover:text-fg active:scale-95"
+      }
+      aria-label="Toggle language"
+    >
+      {locale === "zh" ? "EN" : "中"}
+    </button>
+  );
+}
 
 export function AuthSlot() {
   const { user, isPending } = useCurrentUserState();
@@ -17,18 +34,31 @@ export function AuthSlot() {
   if (isPending && hint) {
     const label = hint.displayName ?? hint.primaryEmail ?? t("account");
     return (
-      <span className="grid size-8 place-items-center rounded-full bg-cream text-sm font-medium">
-        {label.charAt(0).toUpperCase()}
-      </span>
+      <div className="flex items-center gap-2">
+        <LocaleToggle />
+        <span className="grid size-8 place-items-center rounded-full bg-cream text-sm font-medium">
+          {label.charAt(0).toUpperCase()}
+        </span>
+      </div>
     );
   }
 
-  if (isPending) return <span className="inline-block size-8 rounded-full bg-cream" />;
+  if (isPending) {
+    return (
+      <div className="flex items-center gap-2">
+        <LocaleToggle />
+        <span className="inline-block size-8 rounded-full bg-cream" />
+      </div>
+    );
+  }
 
   return (
-    <Button asChild variant="secondary" size="sm">
-      <Link to="/login">{t("signIn")}</Link>
-    </Button>
+    <div className="flex items-center gap-2">
+      <LocaleToggle />
+      <Button asChild variant="secondary" size="sm">
+        <Link to="/login">{t("signIn")}</Link>
+      </Button>
+    </div>
   );
 }
 

@@ -6,7 +6,7 @@ import {
   useRouterState,
 } from "@tanstack/react-router";
 import { Pencil, Trash2 } from "lucide-react";
-import { notice } from "@/components/notice-host";
+import { notice } from "@/lib/notice";
 import {
   formatPourDate,
   type Pour,
@@ -14,7 +14,7 @@ import {
 } from "@/lib/pours";
 import { cachedPour, cachePour } from "@/lib/pour-cache";
 import { loadJournal } from "@/lib/photo-store";
-import { forgetPour, rememberPour } from "@/lib/local-backup";
+import { forgetPour, rememberPour, GUEST_USER_ID } from "@/lib/local-backup";
 import { milkLabel, patternLabel, useLocale, useT } from "@/lib/i18n";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { AppShell } from "@/components/app-shell";
@@ -62,8 +62,7 @@ function PourDetail() {
   const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
   const [open, setOpen] = useState(false);
-  const canEdit = Boolean(user) && Boolean(pour) && !pour?.demo;
-  const signedIn = Boolean(user);
+  const canEdit = Boolean(pour) && !pour?.demo;
 
   useEffect(() => {
     const hit = locationPour ?? cachedPour(id);
@@ -77,34 +76,28 @@ function PourDetail() {
   }, [id, locationPour]);
 
   useEffect(() => {
-    if (!signedIn) {
-      if (!isPending) setReady(true);
-      return;
-    }
     if (locationPour ?? cachedPour(id)) {
       setReady(true);
       return;
     }
     let cancelled = false;
-    const userId = user?.id;
+    const userId = user?.id ?? GUEST_USER_ID;
     void (async () => {
-      if (userId) {
-        const journal = await loadJournal(userId);
-        const hit = journal?.pours.find((p) => p.id === id);
-        if (cancelled) return;
-        if (hit) {
-          cachePour(hit);
-          setPour(hit);
-          setReady(true);
-          return;
-        }
+      const journal = await loadJournal(userId);
+      const hit = journal?.pours.find((p) => p.id === id);
+      if (cancelled) return;
+      if (hit) {
+        cachePour(hit);
+        setPour(hit);
+        setReady(true);
+        return;
       }
       if (!cancelled) setReady(true);
     })();
     return () => {
       cancelled = true;
     };
-  }, [id, signedIn, user?.id, locationPour, isPending]);
+  }, [id, user?.id, locationPour, isPending]);
 
   if (!ready && !pour) {
     return (
@@ -131,7 +124,8 @@ function PourDetail() {
   const name = patternLabel(pour.pattern, locale);
 
   async function onSave(draft: PourDraft) {
-    if (!pour || !user) return;
+    if (!pour) return;
+    const userId = user?.id ?? GUEST_USER_ID;
     const next = {
       ...pour,
       ...draft,
@@ -139,14 +133,15 @@ function PourDetail() {
       demo: false,
     };
     cachePour(next);
-    await rememberPour(user.id, next);
+    await rememberPour(userId, next);
     setPour(next);
     setEditing(false);
     notice(t("updatedLocal"));
   }
 
   async function onDelete() {
-    if (user) await forgetPour(user.id, id);
+    const userId = user?.id ?? GUEST_USER_ID;
+    await forgetPour(userId, id);
     setOpen(false);
     notice(t("deleted"));
     void navigate({ to: "/" });

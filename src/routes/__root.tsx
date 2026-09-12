@@ -61,6 +61,47 @@ function RootDocument() {
   return (
     <html lang={lang} className="antialiased" suppressHydrationWarning>
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+(function(){
+  var K="bloom_chunk_reload_ts";
+  function reload(){
+    try{
+      var last=sessionStorage.getItem(K);
+      var now=Date.now();
+      if(!last||now-Number(last)>10000){
+        sessionStorage.setItem(K,String(now));
+        window.location.reload();
+      }
+    }catch(e){}
+  }
+  window.addEventListener("vite:preloadError",function(){reload();});
+  window.addEventListener("error",function(e){
+    var m=(e&&(e.message||(e.error&&e.error.message)))||"";
+    if(typeof m==="string"&&(
+      m.indexOf("importing a module script failed")!==-1||
+      m.indexOf("dynamically imported module")!==-1||
+      m.indexOf("Failed to fetch dynamically imported module")!==-1
+    )){
+      reload();
+    }
+  });
+  window.addEventListener("unhandledrejection",function(e){
+    var r=e&&e.reason;
+    var m=(r&&(r.message||(typeof r==="string"?r:"")))||"";
+    if(typeof m==="string"&&(
+      m.indexOf("importing a module script failed")!==-1||
+      m.indexOf("dynamically imported module")!==-1||
+      m.indexOf("Failed to fetch dynamically imported module")!==-1
+    )){
+      reload();
+    }
+  });
+})();
+`,
+          }}
+        />
         <HeadContent />
       </head>
       <body className="bg-bg text-fg">

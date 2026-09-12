@@ -88,4 +88,7 @@ test("decodeSharePayload handles empty or missing params gracefully", () => {
   assert.equal(fallback.pattern, "tulip");
   assert.equal(fallback.rating, 5);
   assert.equal(fallback.dayNumber, 1);
+
+  const malformed = decodeSharePayload("https://bloom-latte.vercel.app/?%E0%A4%A");
+  assert.equal(malformed, null);
 });

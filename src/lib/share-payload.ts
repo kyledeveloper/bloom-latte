@@ -111,42 +111,46 @@ export function encodeShareUrl(
 export function decodeSharePayload(
   searchOrUrl: string | URLSearchParams,
 ): SharedPourData | null {
-  const searchParams =
-    typeof searchOrUrl === "string"
-      ? searchOrUrl.includes("?")
-        ? new URLSearchParams(searchOrUrl.slice(searchOrUrl.indexOf("?")))
-        : new URLSearchParams(searchOrUrl)
-      : searchOrUrl;
+  try {
+    const searchParams =
+      typeof searchOrUrl === "string"
+        ? searchOrUrl.includes("?")
+          ? new URLSearchParams(searchOrUrl.slice(searchOrUrl.indexOf("?")))
+          : new URLSearchParams(searchOrUrl)
+        : searchOrUrl;
 
-  const pattern = searchParams.get("p") as PatternId | null;
-  const ratingStr = searchParams.get("r");
-  const dayStr = searchParams.get("d");
-  const id = searchParams.get("id") || undefined;
-  const photo = searchParams.get("ph") || undefined;
+    const pattern = searchParams.get("p") as PatternId | null;
+    const ratingStr = searchParams.get("r");
+    const dayStr = searchParams.get("d");
+    const id = searchParams.get("id") || undefined;
+    const photo = searchParams.get("ph") || undefined;
 
-  // A valid shared payload must at least specify a pattern or a day count or an id
-  if (!pattern && !dayStr && !id) {
+    // A valid shared payload must at least specify a pattern or a day count or an id
+    if (!pattern && !dayStr && !id) {
+      return null;
+    }
+
+    const rating = ratingStr ? Number.parseFloat(ratingStr) : 5;
+    const dayNumber = dayStr ? Number.parseInt(dayStr, 10) : 1;
+    const cupStr = searchParams.get("c");
+    const streakStr = searchParams.get("s");
+
+    return {
+      id,
+      photo,
+      userName: searchParams.get("u") || "",
+      dayNumber: Number.isNaN(dayNumber) ? 1 : Math.max(1, dayNumber),
+      cupNumber: cupStr ? Number.parseInt(cupStr, 10) : undefined,
+      streak: streakStr ? Number.parseInt(streakStr, 10) : undefined,
+      pattern: pattern || "tulip",
+      rating: Number.isNaN(rating) ? 5 : rating,
+      beans: searchParams.get("b") || undefined,
+      milk: searchParams.get("m") || undefined,
+      grind: searchParams.get("g") || undefined,
+      notes: searchParams.get("n") || undefined,
+      createdAt: searchParams.get("t") || new Date().toISOString(),
+    };
+  } catch {
     return null;
   }
-
-  const rating = ratingStr ? Number.parseFloat(ratingStr) : 5;
-  const dayNumber = dayStr ? Number.parseInt(dayStr, 10) : 1;
-  const cupStr = searchParams.get("c");
-  const streakStr = searchParams.get("s");
-
-  return {
-    id,
-    photo,
-    userName: searchParams.get("u") || "",
-    dayNumber: Number.isNaN(dayNumber) ? 1 : Math.max(1, dayNumber),
-    cupNumber: cupStr ? Number.parseInt(cupStr, 10) : undefined,
-    streak: streakStr ? Number.parseInt(streakStr, 10) : undefined,
-    pattern: pattern || "tulip",
-    rating: Number.isNaN(rating) ? 5 : rating,
-    beans: searchParams.get("b") || undefined,
-    milk: searchParams.get("m") || undefined,
-    grind: searchParams.get("g") || undefined,
-    notes: searchParams.get("n") || undefined,
-    createdAt: searchParams.get("t") || new Date().toISOString(),
-  };
 }

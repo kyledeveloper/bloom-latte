@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { getBearerToken } from "@/lib/auth/client";
 import { loadLocalPhoto, saveLocalPhoto } from "@/lib/photo-store";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n";
 
 function isDirectSrc(src: string) {
   return (
@@ -44,6 +45,7 @@ export function PourPhoto({
   const [remote, setRemote] = useState("");
   const [failed, setFailed] = useState(false);
   const blobRef = useRef<string | null>(null);
+  const t = useT();
 
   useEffect(() => {
     setFailed(false);
@@ -115,7 +117,7 @@ export function PourPhoto({
           className,
         )}
       >
-        照片还没带上
+        {t("photoMissing")}
       </div>
     );
   }

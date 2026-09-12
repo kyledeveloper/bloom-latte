@@ -88,9 +88,16 @@ export async function compressImage(file: File): Promise<string> {
   return data;
 }
 
-export function formatPourDate(iso: string) {
+export function formatPourDate(iso: string, locale: "zh" | "en" = "zh") {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
+  if (locale === "en") {
+    return d.toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
+  }
   const month = d.getMonth() + 1;
   const day = d.getDate();
   const week = "日一二三四五六"[d.getDay()];

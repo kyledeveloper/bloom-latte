@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { Camera, ImagePlus } from "lucide-react";
 import { compressImage } from "@/lib/pours";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 
 export function PhotoField({
@@ -15,11 +16,12 @@ export function PhotoField({
   const libraryRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const t = useT();
 
   async function onFile(file: File | undefined) {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      setError("请选择一张照片");
+      setError(t("pickPhoto"));
       return;
     }
     setBusy(true);
@@ -28,7 +30,7 @@ export function PhotoField({
       const data = await compressImage(file);
       onChange(data);
     } catch {
-      setError("照片处理失败，请换一张试试");
+      setError(t("photoFailed"));
     } finally {
       setBusy(false);
     }
@@ -47,11 +49,11 @@ export function PhotoField({
             type="button"
             onClick={() => libraryRef.current?.click()}
             className="size-full"
-            aria-label="更换照片"
+            aria-label={t("changePhoto")}
           >
             <img
               src={value}
-              alt="这杯拉花"
+              alt={t("takePhoto")}
               className="pour-photo photo-in size-full object-cover"
             />
           </button>
@@ -60,13 +62,13 @@ export function PhotoField({
             <span className="text-muted">
               <Camera className="size-7" strokeWidth={1.5} />
             </span>
-            <p className="font-display text-lg tracking-tight">拍下这杯</p>
-            <p className="text-sm text-muted">正上方俯拍，泡沫最清楚</p>
+            <p className="font-display text-lg tracking-tight">{t("takePhoto")}</p>
+            <p className="text-sm text-muted">{t("takePhotoHint")}</p>
           </div>
         )}
         {busy ? (
           <div className="absolute inset-0 grid place-items-center bg-bg/60 text-sm text-muted">
-            处理照片…
+            {t("processingPhoto")}
           </div>
         ) : null}
       </div>
@@ -78,7 +80,7 @@ export function PhotoField({
           onClick={() => cameraRef.current?.click()}
         >
           <Camera />
-          拍照
+          {t("camera")}
         </Button>
         <Button
           type="button"
@@ -86,7 +88,7 @@ export function PhotoField({
           onClick={() => libraryRef.current?.click()}
         >
           <ImagePlus />
-          相册
+          {t("library")}
         </Button>
       </div>
 

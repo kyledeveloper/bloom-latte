@@ -1,10 +1,10 @@
 import {
   formatPourDate,
-  patternOf,
   type Pour,
 } from "@/lib/pours";
 import { getBearerToken } from "@/lib/auth/client";
 import { loadLocalPhoto } from "@/lib/photo-store";
+import { getLocale, patternLabel, translate } from "@/lib/i18n";
 
 const W = 1080;
 const H = 1440;
@@ -167,6 +167,7 @@ async function waitForFonts() {
 
 export async function renderPourShareCard(pour: Pour): Promise<Blob> {
   await waitForFonts();
+  const locale = getLocale();
   const photo = await loadPhoto(pour.photo, pour.demo ? undefined : pour.id);
   const canvas = document.createElement("canvas");
   canvas.width = W;
@@ -189,15 +190,15 @@ export async function renderPourShareCard(pour: Pour): Promise<Blob> {
   cover(ctx, photo, pad, pad, photoSize, photoSize, photo.naturalWidth, photo.naturalHeight);
   ctx.restore();
 
-  const pattern = patternOf(pour.pattern);
+  const patternName = patternLabel(pour.pattern, locale);
   let y = pad + photoSize + 64;
 
   ctx.fillStyle = INK;
   ctx.font = '600 64px "Noto Serif SC", "Songti SC", serif';
   ctx.textBaseline = "alphabetic";
-  ctx.fillText(pattern.name, pad, y);
+  ctx.fillText(patternName, pad, y);
 
-  const nameWidth = ctx.measureText(pattern.name).width;
+  const nameWidth = ctx.measureText(patternName).width;
   const starX = pad + nameWidth + 28;
   const starY = y - 22;
   for (let i = 0; i < 5; i++) {
@@ -210,7 +211,7 @@ export async function renderPourShareCard(pour: Pour): Promise<Blob> {
   y += 48;
   ctx.fillStyle = MUTED;
   ctx.font = '500 30px "Noto Sans SC", sans-serif';
-  ctx.fillText(formatPourDate(pour.createdAt), pad, y);
+  ctx.fillText(formatPourDate(pour.createdAt, locale), pad, y);
 
   const meta = [pour.beans, pour.grind, pour.milk].filter(Boolean).join("  ·  ");
   if (meta) {
@@ -233,10 +234,10 @@ export async function renderPourShareCard(pour: Pour): Promise<Blob> {
   drawMark(ctx, pad, footerY - 22, 48);
   ctx.fillStyle = INK;
   ctx.font = '600 32px "Noto Serif SC", "Songti SC", serif';
-  ctx.fillText("杯中花", pad + 62, footerY + 12);
+  ctx.fillText(locale === "en" ? "Bloom Latte" : "杯中花", pad + 62, footerY + 12);
   ctx.fillStyle = MUTED;
   ctx.font = '400 24px "Noto Sans SC", sans-serif';
-  ctx.fillText("倒一杯，开一朵", pad + 180, footerY + 12);
+  ctx.fillText(translate(locale, "shareTag"), pad + 180, footerY + 12);
 
   return new Promise((resolve, reject) => {
     canvas.toBlob(
@@ -248,12 +249,16 @@ export async function renderPourShareCard(pour: Pour): Promise<Blob> {
 }
 
 export function shareFilename(pour: Pour) {
-  const pattern = patternOf(pour.pattern).name;
+  const locale = getLocale();
+  const pattern = patternLabel(pour.pattern, locale);
   const d = new Date(pour.createdAt);
   const stamp = Number.isNaN(d.getTime())
     ? ""
-    : `-${d.getMonth() + 1}月${d.getDate()}日`;
-  return `杯中花-${pattern}${stamp}.jpg`;
+    : locale === "en"
+      ? `-${d.getMonth() + 1}-${d.getDate()}`
+      : `-${d.getMonth() + 1}月${d.getDate()}日`;
+  const brand = locale === "en" ? "BloomLatte" : "杯中花";
+  return `${brand}-${pattern}${stamp}.jpg`;
 }
 
 export async function nativeShareImage(blob: Blob, filename: string, title: string) {

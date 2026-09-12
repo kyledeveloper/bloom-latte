@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { formatShortDate, patternOf, pourCardSrc, type Pour } from "@/lib/pours";
+import { formatShortDate, pourCardSrc, type Pour } from "@/lib/pours";
 import { cachePour } from "@/lib/pour-cache";
+import { patternLabel, useLocale, useT } from "@/lib/i18n";
 import { PatternMark } from "@/components/pattern-mark";
 import { PourPhoto } from "@/components/pour-photo";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +13,9 @@ export function PourCard({
   pour: Pour;
   priority?: boolean;
 }) {
-  const pattern = patternOf(pour.pattern);
+  const locale = useLocale();
+  const t = useT();
+  const name = patternLabel(pour.pattern, locale);
   return (
     <Link
       to="/pour/$id"
@@ -25,13 +28,13 @@ export function PourCard({
       <div className="relative overflow-hidden rounded-lg bg-cream">
         <PourPhoto
           src={pourCardSrc(pour)}
-          alt={`${pattern.name}拉花`}
+          alt={`${name}`}
           pourId={pour.demo ? undefined : pour.id}
           priority={priority}
         />
         {pour.demo ? (
           <Badge className="absolute top-2 left-2 bg-surface/90 text-muted backdrop-blur-sm">
-            示例
+            {t("demo")}
           </Badge>
         ) : null}
       </div>
@@ -41,7 +44,7 @@ export function PourCard({
             <span className="text-muted">
               <PatternMark id={pour.pattern} className="size-3.5" />
             </span>
-            <span className="truncate">{pattern.name}</span>
+            <span className="truncate">{name}</span>
           </p>
           <p className="mt-0.5 text-xs text-muted tabular-nums">
             {formatShortDate(pour.createdAt)}

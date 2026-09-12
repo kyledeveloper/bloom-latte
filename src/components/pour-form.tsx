@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { emptyDraft, MILKS, type Pour, type PourDraft } from "@/lib/pours";
 import { loadLocalPhoto } from "@/lib/photo-store";
+import { milkLabel, useLocale, useT } from "@/lib/i18n";
 import { PhotoField } from "@/components/photo-field";
 import { PatternPicker } from "@/components/pattern-picker";
 import { RatingPicker } from "@/components/rating";
@@ -56,6 +57,8 @@ export function PourForm({
   const [date, setDate] = useState(toDateInput(initial?.createdAt));
   const [missingPhoto, setMissingPhoto] = useState(false);
   const [saving, setSaving] = useState(false);
+  const t = useT();
+  const locale = useLocale();
 
   useEffect(() => {
     if (!initial?.id) return;
@@ -108,46 +111,46 @@ export function PourForm({
         }}
       />
       {missingPhoto ? (
-        <p className="-mt-4 text-sm text-danger">先拍一张，再记下这杯。</p>
+        <p className="-mt-4 text-sm text-danger">{t("needPhoto")}</p>
       ) : null}
 
       <fieldset className="flex flex-col gap-2">
         <Label asChild>
-          <legend>图案</legend>
+          <legend>{t("pattern")}</legend>
         </Label>
         <PatternPicker value={draft.pattern} onChange={(id) => set("pattern", id)} />
       </fieldset>
 
       <fieldset className="flex flex-col gap-2">
         <Label asChild>
-          <legend>评分</legend>
+          <legend>{t("rating")}</legend>
         </Label>
         <RatingPicker value={draft.rating} onChange={(n) => set("rating", n)} />
       </fieldset>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="beans">豆子</Label>
+          <Label htmlFor="beans">{t("beans")}</Label>
           <Input
             id="beans"
             value={draft.beans}
-            placeholder="埃塞俄比亚 古吉"
+            placeholder={t("beansPh")}
             onChange={(e) => set("beans", e.target.value)}
           />
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="grind">研磨度</Label>
+          <Label htmlFor="grind">{t("grind")}</Label>
           <Input
             id="grind"
             value={draft.grind}
-            placeholder="中细 / EK43 8.5"
+            placeholder={t("grindPh")}
             onChange={(e) => set("grind", e.target.value)}
           />
         </div>
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="milk">奶</Label>
+        <Label htmlFor="milk">{t("milk")}</Label>
         <div className="no-scrollbar flex gap-2 overflow-x-auto">
           {MILKS.map((m) => {
             const selected = draft.milk === m;
@@ -162,7 +165,7 @@ export function PourForm({
                     : "h-9 shrink-0 rounded-full bg-surface px-3.5 text-sm font-medium text-muted shadow-[var(--shadow-border)]"
                 }
               >
-                {m}
+                {milkLabel(m, locale)}
               </button>
             );
           })}
@@ -170,7 +173,7 @@ export function PourForm({
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="date">日期</Label>
+        <Label htmlFor="date">{t("date")}</Label>
         <Input
           id="date"
           type="date"
@@ -180,12 +183,12 @@ export function PourForm({
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="notes">笔记</Label>
+        <Label htmlFor="notes">{t("notes")}</Label>
         <Textarea
           id="notes"
           maxLength={280}
           value={draft.notes}
-          placeholder="奶泡细不细，收口偏哪边，下次改什么。"
+          placeholder={t("notesPh")}
           onChange={(e) => set("notes", e.target.value)}
         />
         <p className="text-right text-xs text-subtle tabular-nums">
@@ -194,7 +197,7 @@ export function PourForm({
       </div>
 
       <Button type="submit" size="lg" className="w-full" disabled={saving}>
-        {saving ? "保存中…" : submitLabel}
+        {saving ? t("saving") : submitLabel}
       </Button>
     </form>
   );

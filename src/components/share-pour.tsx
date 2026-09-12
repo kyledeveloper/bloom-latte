@@ -8,7 +8,8 @@ import {
   renderPourShareCard,
   shareFilename,
 } from "@/lib/share-card";
-import { patternOf, type Pour } from "@/lib/pours";
+import { type Pour } from "@/lib/pours";
+import { patternLabel, useLocale, useT } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -32,8 +33,9 @@ export function SharePourButton({
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [blob, setBlob] = useState<Blob | null>(null);
-  const pattern = patternOf(pour.pattern);
-  const title = `杯中花 · ${pattern.name}`;
+  const t = useT();
+  const locale = useLocale();
+  const title = `${t("bloom")} · ${patternLabel(pour.pattern, locale)}`;
 
   useEffect(() => {
     return () => {
@@ -50,7 +52,7 @@ export function SharePourButton({
       setBlob(next);
       setPreview(URL.createObjectURL(next));
     } catch {
-      notice("这张图没生成出来，再试一次。");
+      notice(t("shareFailed"));
       setOpen(false);
     } finally {
       setBusy(false);
@@ -61,18 +63,18 @@ export function SharePourButton({
     if (!blob) return;
     try {
       const result = await nativeShareImage(blob, shareFilename(pour), title);
-      if (result !== "shared") notice("图片已保存，发给朋友吧。");
+      if (result !== "shared") notice(t("shareSavedSend"));
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
       downloadBlob(blob, shareFilename(pour));
-      notice("图片已保存。");
+      notice(t("shareSaved"));
     }
   }
 
   function saveImage() {
     if (!blob) return;
     downloadBlob(blob, shareFilename(pour));
-    notice("已保存到相册 / 下载。");
+    notice(t("shareDownloaded"));
   }
 
   return (
@@ -85,14 +87,14 @@ export function SharePourButton({
           onClick={() => void openShare()}
         >
           <Share2 />
-          分享给朋友
+          {t("shareFriends")}
         </Button>
       ) : (
         <Button
           type="button"
           variant="ghost"
           size="icon"
-          aria-label="分享"
+          aria-label={t("share")}
           className={className}
           onClick={(e) => {
             e.preventDefault();
@@ -113,10 +115,8 @@ export function SharePourButton({
       >
         <DialogContent className="w-[min(100%-1.5rem,22rem)] gap-3 p-4">
           <DialogHeader>
-            <DialogTitle>分享这杯</DialogTitle>
-            <DialogDescription>
-              生成一张卡片，发给朋友或存进相册。
-            </DialogDescription>
+            <DialogTitle>{t("shareThis")}</DialogTitle>
+            <DialogDescription>{t("shareBody")}</DialogDescription>
           </DialogHeader>
           <div
             className={cn(
@@ -127,7 +127,7 @@ export function SharePourButton({
             {preview ? (
               <img
                 src={preview}
-                alt={`${pattern.name}分享卡片`}
+                alt={title}
                 className="block w-full"
               />
             ) : (
@@ -141,14 +141,14 @@ export function SharePourButton({
               disabled={!blob || busy}
               onClick={saveImage}
             >
-              保存图片
+              {t("saveImage")}
             </Button>
             <Button
               type="button"
               disabled={!blob || busy}
               onClick={() => void sendToFriends()}
             >
-              {canNativeShare() ? "发给朋友" : "下载分享"}
+              {canNativeShare() ? t("sendToFriends") : t("downloadShare")}
             </Button>
           </div>
         </DialogContent>

@@ -4,6 +4,7 @@ import { Camera } from "lucide-react";
 import { PATTERNS, pourCardSrc, type PatternId } from "@/lib/pours";
 import { SEED_POURS } from "@/lib/seed";
 import { usePours } from "@/lib/use-pours";
+import { patternLabel, useLocale, useT } from "@/lib/i18n";
 import { AppShell } from "@/components/app-shell";
 import { AuthSlot } from "@/components/auth-slot";
 import { PourCard } from "@/components/pour-card";
@@ -26,6 +27,8 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   const { pours, ready, signedIn } = usePours();
+  const t = useT();
+  const locale = useLocale();
   const [filter, setFilter] = useState<PatternId | "all">("all");
   const ownPours = signedIn ? pours : SEED_POURS;
   const gallery = signedIn ? pours : SEED_POURS;
@@ -68,7 +71,7 @@ function Home() {
           >
             <Link to="/new">
               <Camera />
-              记录
+              {t("record")}
             </Link>
           </Button>
         </div>
@@ -76,26 +79,26 @@ function Home() {
     >
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-4">
-          <p className="max-w-md text-muted">倒一杯，开一朵。</p>
+          <p className="max-w-md text-muted">{t("tagline")}</p>
         </div>
 
         {ready ? <StatsBar pours={ownPours} /> : <StatsSkeleton />}
 
         {ready && !signedIn ? (
           <div className="flex flex-col gap-2 rounded-lg bg-cream/80 px-3 py-2.5 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
-            <p>现在看到的是示例。登录后开始记你自己的拉花。</p>
+            <p>{t("examplesHint")}</p>
             <Link
               to="/login"
               className="shrink-0 font-medium text-fg underline-offset-4 hover:underline"
             >
-              登录
+              {t("signIn")}
             </Link>
           </div>
         ) : null}
 
         {showExamples ? (
           <div className="rounded-lg bg-cream/80 px-3 py-2.5 text-sm text-muted">
-            你的手记还是空的。下面是示例，点「记录」记第一杯。
+            {t("emptyHint")}
           </div>
         ) : (
           <PatternFilter value={filter} onChange={setFilter} counts={counts} />
@@ -135,13 +138,15 @@ function Home() {
         {ready && ranked.length > 0 ? (
           <section className="rounded-xl bg-surface p-4 shadow-[var(--shadow-border)]">
             <h2 className="font-display text-base font-medium tracking-tight">
-              练得最多
+              {t("practicedMost")}
             </h2>
-            <ul className="mt-3 flex flex-col gap-2.5">
+            <ul className="mt-3 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2.5 text-sm">
               {ranked.map((p) => (
-                <li key={p.id} className="flex items-center gap-3 text-sm">
-                  <span className="w-16 shrink-0 text-muted">{p.name}</span>
-                  <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-cream">
+                <li key={p.id} className="contents">
+                  <span className="whitespace-nowrap text-muted">
+                    {patternLabel(p.id, locale)}
+                  </span>
+                  <span className="h-1.5 overflow-hidden rounded-full bg-cream">
                     <span
                       className="bar-fill block h-full rounded-full bg-primary"
                       style={{
@@ -165,7 +170,7 @@ function Home() {
         className="fab-in fixed right-[max(1rem,env(safe-area-inset-right))] bottom-[calc(env(safe-area-inset-bottom)+1rem)] z-30 flex h-12 items-center gap-2 rounded-full bg-primary px-4 text-sm font-medium text-primary-fg shadow-[var(--shadow-border)] transition-transform duration-150 hover:-translate-y-0.5 active:scale-[0.96] sm:hidden"
       >
         <Camera className="size-5" />
-        记录
+        {t("record")}
       </Link>
     </>
   );
@@ -191,23 +196,24 @@ function EmptyState({
   filtered: boolean;
   signedIn: boolean;
 }) {
+  const t = useT();
   return (
     <div className="flex flex-col items-center gap-3 rounded-xl bg-surface px-6 py-14 text-center shadow-[var(--shadow-border)]">
       <Wordmark className="size-12" />
       <h2 className="font-display text-xl font-medium tracking-tight">
-        {filtered ? "这个图案还是空白" : "还没有开出第一朵"}
+        {filtered ? t("emptyFiltered") : t("emptyNone")}
       </h2>
       <p className="max-w-xs text-sm text-muted">
         {filtered
-          ? "换个筛选，或者现在就去拉一杯这个形状。"
+          ? t("emptyFilteredBody")
           : signedIn
-            ? "倒一杯热牛奶，在浓缩上留下你的图案。"
-            : "登录后开始记你自己的拉花。"}
+            ? t("emptySignedInBody")
+            : t("emptyGuestBody")}
       </p>
       <Button asChild size="pill" className="mt-2">
         <Link to="/new">
           <Camera />
-          记录
+          {t("record")}
         </Link>
       </Button>
     </div>

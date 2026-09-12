@@ -4,6 +4,7 @@ import { ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Wordmark } from "@/components/wordmark";
 import { Button } from "@/components/ui/button";
+import { useT } from "@/lib/i18n";
 
 export function AppShell({
   children,
@@ -20,6 +21,7 @@ export function AppShell({
   editorial?: boolean;
   width?: "wide" | "medium" | "narrow";
 }) {
+  const t = useT();
   return (
     <div
       className={cn(
@@ -43,7 +45,7 @@ export function AppShell({
                 杯中花
               </span>
               <span className="hidden text-xs tracking-[0.18em] text-muted uppercase sm:inline">
-                Bloom · 拉花手记
+                {t("bloomSub")}
               </span>
             </span>
           </Link>
@@ -51,7 +53,7 @@ export function AppShell({
           <>
             {backTo ? (
               <Button variant="ghost" size="icon" className="-ml-2" asChild>
-                <Link to={backTo} aria-label="返回">
+                <Link to={backTo} aria-label={t("back")}>
                   <ChevronLeft className="size-5" />
                 </Link>
               </Button>

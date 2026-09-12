@@ -4,9 +4,11 @@ import {
   Outlet,
   Scripts,
 } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import { NoticeHost } from "@/components/notice-host";
+import { getLocale, useLocale } from "@/lib/i18n";
 import appCss from "../styles.css?url";
 
 const APP_NAME = "杯中花";
@@ -45,15 +47,25 @@ export const Route = createRootRoute({
   component: RootDocument,
 });
 
+function LangSync() {
+  const locale = useLocale();
+  useEffect(() => {
+    document.documentElement.lang = locale === "zh" ? "zh-CN" : "en";
+  }, [locale]);
+  return null;
+}
+
 function RootDocument() {
+  const lang = getLocale() === "en" ? "en" : "zh-CN";
   return (
-    <html lang="zh-CN" className="antialiased" suppressHydrationWarning>
+    <html lang={lang} className="antialiased" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
       <body className="bg-bg text-fg">
         <PreviewHostBridge />
         <AuthProvider>
+          <LangSync />
           <Outlet />
           <NoticeHost />
         </AuthProvider>

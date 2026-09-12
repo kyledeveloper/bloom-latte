@@ -7,6 +7,7 @@ import {
 } from "@/lib/auth/client";
 import { emailAndPasswordEnabled } from "@/lib/auth/email-password";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
+import { useT } from "@/lib/i18n";
 import { notice } from "@/components/notice-host";
 import { Wordmark } from "@/components/wordmark";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,7 @@ export const Route = createFileRoute("/login")({
 
 function Login() {
   const { user, isPending } = useCurrentUserState();
+  const t = useT();
   const [mode, setMode] = useState<"in" | "up">("in");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -55,14 +57,14 @@ function Login() {
           password,
           name: email.split("@")[0] || "杯中花",
         });
-        if (error) throw new Error(error.message ?? "注册失败");
+        if (error) throw new Error(error.message ?? t("registerFail"));
       } else {
         const { error } = await authClient.signIn.email({ email, password });
         if (error) throw new Error(error.message ?? "登录失败");
       }
       window.location.href = "/";
     } catch (err) {
-      notice(err instanceof Error ? err.message : "没登录上，再试一次。");
+      notice(err instanceof Error ? err.message : t("loginFail"));
       setBusy(false);
     }
   }
@@ -74,7 +76,7 @@ function Login() {
       notice(
         err instanceof Error
           ? err.message
-          : "Google / X 在这个网站上不可用，请用邮箱登录。",
+          : t("socialFail"),
       );
     }
   }
@@ -88,14 +90,12 @@ function Login() {
             杯中花
           </span>
         </Link>
-        <p className="text-muted">
-          登录之后，拉花跟着账号走。换手机打开同一个网页，本子还在。
-        </p>
+        <p className="text-muted">{t("loginLead")}</p>
 
         {emailAndPasswordEnabled ? (
           <form className="flex w-full flex-col gap-3 text-left" onSubmit={onEmailSubmit}>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="email">邮箱</Label>
+              <Label htmlFor="email">{t("email")}</Label>
               <Input
                 id="email"
                 type="email"
@@ -106,7 +106,7 @@ function Login() {
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="password">密码</Label>
+              <Label htmlFor="password">{t("password")}</Label>
               <Input
                 id="password"
                 type="password"
@@ -118,14 +118,14 @@ function Login() {
               />
             </div>
             <Button type="submit" size="lg" className="w-full" disabled={busy}>
-              {busy ? "请稍等…" : mode === "up" ? "注册并登录" : "登录"}
+              {busy ? t("wait") : mode === "up" ? t("registerLogin") : t("signIn")}
             </Button>
             <button
               type="button"
               className="text-sm text-muted underline-offset-4 hover:underline"
               onClick={() => setMode((m) => (m === "in" ? "up" : "in"))}
             >
-              {mode === "in" ? "还没有账号？注册一个" : "已有账号？去登录"}
+              {mode === "in" ? t("noAccount") : t("hasAccount")}
             </button>
           </form>
         ) : null}
@@ -141,17 +141,17 @@ function Login() {
                 className="w-full"
                 onClick={() => void onSocial(p.providerId)}
               >
-                使用 {p.label} 继续
+                {t("continueWith", { name: p.label })}
               </Button>
             ))}
           </div>
         ) : (
           <p className="text-sm text-muted">
-            这个网站请用邮箱注册登录。Google / X 只在 Grok 预览里可用。
+            {t("emailOnly")}
           </p>
         )}
         <Link to="/" className="text-sm text-muted underline-offset-4 hover:underline">
-          先看看示例
+          {t("seeExamples")}
         </Link>
       </div>
     </main>

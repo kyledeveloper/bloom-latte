@@ -9,13 +9,13 @@ import { Pencil, Trash2 } from "lucide-react";
 import { notice } from "@/components/notice-host";
 import {
   formatPourDate,
-  patternOf,
   type Pour,
   type PourDraft,
 } from "@/lib/pours";
 import { cachedPour, cachePour } from "@/lib/pour-cache";
 import { loadJournal } from "@/lib/photo-store";
 import { forgetPour, rememberPour } from "@/lib/local-backup";
+import { milkLabel, patternLabel, useLocale, useT } from "@/lib/i18n";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { AppShell } from "@/components/app-shell";
 import { AuthSlot } from "@/components/auth-slot";
@@ -53,6 +53,8 @@ function PourDetail() {
     select: (s) => pourFromLocation(id, s.location.state),
   });
   const { user, isPending } = useCurrentUserState();
+  const t = useT();
+  const locale = useLocale();
   const [pour, setPour] = useState<Pour | null>(
     () => locationPour ?? cachedPour(id),
   );
@@ -106,27 +108,27 @@ function PourDetail() {
 
   if (!ready && !pour) {
     return (
-      <AppShell title="拉花" backTo="/" action={<AuthSlot />}>
+      <AppShell title={t("latteArt")} backTo="/" action={<AuthSlot />}>
         <div className="aspect-square animate-pulse rounded-2xl bg-cream" />
-        <p className="mt-4 text-sm text-muted">正在打开这杯…</p>
+        <p className="mt-4 text-sm text-muted">{t("openingPour")}</p>
       </AppShell>
     );
   }
 
   if (!pour) {
     return (
-      <AppShell title="找不到这杯" backTo="/" action={<AuthSlot />}>
+      <AppShell title={t("pourMissingTitle")} backTo="/" action={<AuthSlot />}>
         <div className="rounded-xl bg-surface px-6 py-12 text-center shadow-[var(--shadow-border)]">
-          <p className="font-display text-xl">这页已经不在手记里了。</p>
+          <p className="font-display text-xl">{t("pourMissing")}</p>
           <Button asChild className="mt-5" size="pill">
-            <Link to="/">回到手记</Link>
+            <Link to="/">{t("backToJournal")}</Link>
           </Button>
         </div>
       </AppShell>
     );
   }
 
-  const pattern = patternOf(pour.pattern);
+  const name = patternLabel(pour.pattern, locale);
 
   async function onSave(draft: PourDraft) {
     if (!pour || !user) return;
@@ -140,19 +142,19 @@ function PourDetail() {
     await rememberPour(user.id, next);
     setPour(next);
     setEditing(false);
-    notice("已更新。改动只在这台设备上。");
+    notice(t("updatedLocal"));
   }
 
   async function onDelete() {
     if (user) await forgetPour(user.id, id);
     setOpen(false);
-    notice("删掉了。");
+    notice(t("deleted"));
     void navigate({ to: "/" });
   }
 
   return (
     <AppShell
-      title={pattern.name}
+      title={name}
       backTo="/"
       width="medium"
       action={
@@ -163,30 +165,28 @@ function PourDetail() {
               <Button
                 variant="ghost"
                 size="icon"
-                aria-label={editing ? "取消编辑" : "编辑"}
+                aria-label={editing ? t("cancelEdit") : t("edit")}
                 onClick={() => setEditing((v) => !v)}
               >
                 <Pencil className="size-4" />
               </Button>
               <Dialog open={open} onOpenChange={setOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="ghost" size="icon" aria-label="删除">
+                  <Button variant="ghost" size="icon" aria-label={t("delete")}>
                     <Trash2 className="size-4" />
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>删掉这杯？</DialogTitle>
-                    <DialogDescription>
-                      照片和笔记都会从云端手记里拿走，不能恢复。
-                    </DialogDescription>
+                    <DialogTitle>{t("deleteThis")}</DialogTitle>
+                    <DialogDescription>{t("deleteBody")}</DialogDescription>
                   </DialogHeader>
                   <DialogFooter>
                     <Button variant="secondary" onClick={() => setOpen(false)}>
-                      留下
+                      {t("keep")}
                     </Button>
                     <Button variant="danger" onClick={() => void onDelete()}>
-                      删除
+                      {t("delete")}
                     </Button>
                   </DialogFooter>
                 </DialogContent>
@@ -198,13 +198,13 @@ function PourDetail() {
       }
     >
       {editing && canEdit ? (
-        <PourForm initial={pour} submitLabel="保存修改" onSubmit={onSave} />
+        <PourForm initial={pour} submitLabel={t("saveEdit")} onSubmit={onSave} />
       ) : (
         <article className="page-enter grid gap-6 md:grid-cols-2 md:items-start md:gap-8">
           <div className="overflow-hidden rounded-2xl bg-cream p-2 shadow-[var(--shadow-border)]">
             <PourPhoto
               src={pour.photo}
-              alt={`${pattern.name}拉花`}
+              alt={name}
               pourId={pour.demo ? undefined : pour.id}
               priority
               className="rounded-lg"
@@ -215,19 +215,20 @@ function PourDetail() {
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="outline" className="gap-1">
                 <PatternMark id={pour.pattern} className="size-3.5" />
-                {pattern.name}
-                <span className="text-subtle">{pattern.en}</span>
+                {name}
               </Badge>
-              {pour.demo ? <Badge>示例</Badge> : null}
+              {pour.demo ? <Badge>{t("demo")}</Badge> : null}
               <RatingStars value={pour.rating} />
             </div>
 
             <div>
               <p className="font-display text-2xl font-medium tracking-tight">
-                {formatPourDate(pour.createdAt)}
+                {formatPourDate(pour.createdAt, locale)}
               </p>
               <p className="mt-1 text-muted">
-                {[pour.beans, pour.grind, pour.milk].filter(Boolean).join(" · ")}
+                {[pour.beans, pour.grind, pour.milk ? milkLabel(pour.milk, locale) : ""]
+                  .filter(Boolean)
+                  .join(" · ")}
               </p>
             </div>
 
@@ -236,7 +237,7 @@ function PourDetail() {
                 {pour.notes}
               </p>
             ) : (
-              <p className="text-sm text-muted">这杯没有写笔记。</p>
+              <p className="text-sm text-muted">{t("noNotes")}</p>
             )}
 
             <SharePourButton pour={pour} variant="cta" className="self-start" />

@@ -1,6 +1,7 @@
 import { PATTERNS, type PatternId } from "@/lib/pours";
 import { PatternMark } from "@/components/pattern-mark";
 import { cn } from "@/lib/utils";
+import { patternLabel, useLocale, useT } from "@/lib/i18n";
 
 export function PatternPicker({
   value,
@@ -9,11 +10,13 @@ export function PatternPicker({
   value: PatternId;
   onChange: (id: PatternId) => void;
 }) {
+  const t = useT();
+  const locale = useLocale();
   return (
     <div
       className="grid grid-cols-3 gap-2 sm:grid-cols-4"
       role="radiogroup"
-      aria-label="拉花图案"
+      aria-label={t("patternsAria")}
     >
       {PATTERNS.map((p) => {
         const selected = p.id === value;
@@ -32,7 +35,9 @@ export function PatternPicker({
             )}
           >
             <PatternMark id={p.id} className="size-5" />
-            <span className="text-xs font-medium leading-tight">{p.name}</span>
+            <span className="text-xs font-medium leading-tight">
+              {patternLabel(p.id, locale)}
+            </span>
           </button>
         );
       })}
@@ -49,9 +54,11 @@ export function PatternFilter({
   onChange: (id: PatternId | "all") => void;
   counts: Partial<Record<PatternId | "all", number>>;
 }) {
+  const t = useT();
+  const locale = useLocale();
   const chips: { id: PatternId | "all"; name: string }[] = [
-    { id: "all", name: "全部" },
-    ...PATTERNS.map((p) => ({ id: p.id, name: p.name })),
+    { id: "all", name: t("all") },
+    ...PATTERNS.map((p) => ({ id: p.id, name: patternLabel(p.id, locale) })),
   ];
   return (
     <div className="no-scrollbar -mx-5 flex flex-nowrap gap-2 overflow-x-auto px-5 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">

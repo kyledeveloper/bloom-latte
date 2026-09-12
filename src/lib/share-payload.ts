@@ -1,5 +1,5 @@
-import { pourStreak, type PatternId, type Pour } from "@/lib/pours";
-import { getWebsiteShareUrl } from "@/lib/qr-code";
+import { pourStreak, type PatternId, type Pour } from "./pours.ts";
+import { getWebsiteShareUrl } from "./qr-code.ts";
 
 export interface SharedPourData {
   userName: string;

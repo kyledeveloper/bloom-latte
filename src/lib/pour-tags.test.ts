@@ -4,9 +4,12 @@ import {
   isTagActive,
   removeTagText,
   toggleTagInNotes,
+  createCustomTag,
+  updateTagLabel,
+  deleteTag,
   EQUIPMENT_TAGS,
   TECHNIQUE_TAGS,
-} from "./pour-tags.js";
+} from "./pour-tags.ts";
 
 test("isTagActive correctly detects Chinese and English tags", () => {
   const sharp = EQUIPMENT_TAGS[0]!;

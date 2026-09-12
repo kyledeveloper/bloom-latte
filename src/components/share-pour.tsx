@@ -41,7 +41,8 @@ export function SharePourButton({
   const { pours } = usePours();
   const { user } = useCurrentUserState();
 
-  const userName = user?.name || user?.email?.split("@")[0] || "";
+  const userName =
+    user?.displayName || user?.primaryEmail?.split("@")[0] || "";
   const sharePayload = useMemo(
     () => buildPourSharePayload(pour, pours, userName),
     [pour, pours, userName],
@@ -155,14 +156,14 @@ export function SharePourButton({
           setOpen(next);
         }}
       >
-        <DialogContent className="w-[min(100%-1.5rem,22rem)] gap-3 p-4">
-          <DialogHeader>
+        <DialogContent className="max-h-[92dvh] w-[min(100%-1.5rem,22rem)] overflow-y-auto gap-3 p-4 flex flex-col">
+          <DialogHeader className="shrink-0">
             <DialogTitle>{t("shareThis")}</DialogTitle>
             <DialogDescription>{t("shareBody")}</DialogDescription>
           </DialogHeader>
           <div
             className={cn(
-              "overflow-hidden rounded-lg bg-cream",
+              "relative flex max-h-[48vh] sm:max-h-[360px] w-full items-center justify-center overflow-hidden rounded-xl bg-cream/70 p-1",
               busy && "animate-pulse",
             )}
           >
@@ -170,15 +171,15 @@ export function SharePourButton({
               <img
                 src={preview}
                 alt={title}
-                className="block w-full"
+                className="max-h-[46vh] sm:max-h-[350px] w-auto max-w-full rounded-lg object-contain shadow-xs"
               />
             ) : (
-              <div className="aspect-[3/4] w-full" />
+              <div className="aspect-[3/4] h-56 w-full" />
             )}
           </div>
 
           {shareUrl ? (
-            <div className="flex items-center justify-between gap-2 rounded-lg border border-border/70 bg-surface px-3 py-2 text-xs">
+            <div className="flex shrink-0 items-center justify-between gap-2 rounded-lg border border-border/70 bg-surface px-3 py-2 text-xs">
               <div className="flex min-w-0 items-center gap-1.5 text-muted">
                 <Link2 className="size-3.5 shrink-0" />
                 <span className="truncate">{shareUrl.replace(/^https?:\/\//, "")}</span>
@@ -195,7 +196,7 @@ export function SharePourButton({
             </div>
           ) : null}
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2 shrink-0">
             <Button
               type="button"
               variant="secondary"

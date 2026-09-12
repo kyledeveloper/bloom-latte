@@ -5,8 +5,8 @@ import {
   buildPourSharePayload,
   encodeShareUrl,
   decodeSharePayload,
-} from "./share-payload.js";
-import type { Pour } from "./pours.js";
+} from "./share-payload.ts";
+import type { Pour } from "./pours.ts";
 
 const mockPours: Pour[] = [
   {

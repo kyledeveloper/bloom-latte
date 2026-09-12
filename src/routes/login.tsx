@@ -1,23 +1,17 @@
 import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { GROK_PROVIDERS, signIn } from "@/lib/auth/client";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
+import { Route as RootRoute } from "@/routes/__root";
 import { Wordmark } from "@/components/wordmark";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/login")({ component: Login });
 
 function Login() {
-  const { user, isPending } = useCurrentUserState();
+  const { sessionUser } = RootRoute.useRouteContext();
+  const { user } = useCurrentUserState();
 
-  if (isPending) {
-    return (
-      <main className="grid min-h-dvh place-items-center bg-bg px-6">
-        <div className="h-12 w-48 rounded-full bg-cream" />
-      </main>
-    );
-  }
-
-  if (user) return <Navigate to="/" />;
+  if (user || sessionUser) return <Navigate to="/" />;
 
   return (
     <main className="grid min-h-dvh place-items-center bg-bg px-6">

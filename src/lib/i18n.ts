@@ -189,6 +189,20 @@ const zh = {
   done: "完成",
   save: "保存",
   cancel: "取消",
+  // onboarding
+  obSkip: "跳过",
+  obFinish: "开始记录",
+  obNext: "下一步",
+  obPrev: "上一步",
+  obStep: "{current} / {total}",
+  obTitle1: "欢迎来到杯中花",
+  obBody1: "一本专属你的咖啡拉花手记。拍下每一杯，记下图案、豆子和心得，慢慢看自己的进步。",
+  obTitle2: "记下第一杯",
+  obBody2: "点右下角的「记录」按钮，拍一张俯拍照片，再填上图案和评分，就完成了。",
+  obTitle3: "丰富每条记录",
+  obBody3: "选奶种、填研磨度、贴快捷标签——器具、杯型、手法一键记录，不用每次手打。",
+  obTitle4: "数据只在你的设备上",
+  obBody4: "所有手记默认保存在本地，离线也能用。注册登录后，随时手动备份到云端，换设备也不丢。",
 } as const;
 
 const en: Record<keyof typeof zh, string> = {
@@ -331,6 +345,20 @@ const en: Record<keyof typeof zh, string> = {
   done: "Done",
   save: "Save",
   cancel: "Cancel",
+  // onboarding
+  obSkip: "Skip",
+  obFinish: "Start logging",
+  obNext: "Next",
+  obPrev: "Back",
+  obStep: "{current} of {total}",
+  obTitle1: "Welcome to Bloom Latte",
+  obBody1: "A personal journal for your latte art. Capture each cup, note the pattern, beans, and thoughts — and watch yourself improve.",
+  obTitle2: "Log your first cup",
+  obBody2: "Tap the Log button in the bottom-right, take a top-down photo, pick a pattern and rating, and you're done.",
+  obTitle3: "Build richer notes",
+  obBody3: "Choose your milk, log the grind, and tap quick tags for equipment, cup type, and technique — no typing needed.",
+  obTitle4: "Your data stays on your device",
+  obBody4: "Everything is saved locally by default — no network needed. Sign in anytime to manually back up to the cloud and restore on a new device.",
 };
 
 export const messages = { zh, en };

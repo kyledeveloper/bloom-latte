@@ -9,6 +9,7 @@ import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import { NoticeHost } from "@/components/notice-host";
 import { getLocale, translate, useLocale } from "@/lib/i18n";
+import { OnboardingDrawer } from "@/components/onboarding";
 import appCss from "../styles.css?url";
 
 const APP_NAME = "杯中花";
@@ -110,6 +111,7 @@ function RootDocument() {
           <LangSync />
           <Outlet />
           <NoticeHost />
+          <OnboardingDrawer />
         </AuthProvider>
         <Scripts />
       </body>
